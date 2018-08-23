@@ -1,1 +1,1 @@
-# Trabalho disciplina de programção de alto desempenho
+# Trabalho disciplina de programação de alto desempenho
