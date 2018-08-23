@@ -16,8 +16,7 @@
     <script type="text/javascript">
 
     $(document).ready(function() {
-      // executes when HTML-Document is loaded and DOM is ready
-      //$('#resultado').hide();
+
       limparTela();
       if (!window.Worker){
         alert('Seu navegador não suporta web workers');
@@ -25,14 +24,14 @@
     });
 
 
+
     function limparTela(){
       $('#numerosGerados').empty();
       $('#numerosGeradosLabel').hide();
-      
       $('#numerosGerados').hide();
-      
       $('#resultadoLabel').hide();
       $('#resultado').empty();
+      $('#response').empty();
       $('#tabelaResultado').hide();
     }  
 
@@ -137,11 +136,25 @@
         // adicionando os resultados no html
         $('#resultado').append('<tr><td>'+ (i+1) +'</td><td>'+ bs_time +'</td><td>'+ ss_time +'</td><td>'+ is_time +'</td><td>'+ ms_time +'</td><td>'+ qs_time +'</td><td>'+ hs_time +'</td><td>'+ sort_time +'</td></tr>');
       }
-      
     }
 
+    /*  realiza uma requisição ajax para um  
+        endereço e exibe a tela a esposta recebida
+    */
+    function request(){
+
+      var msg = $('#msg').val();
+      var url = 'http://191.36.58.12/retorno/' + msg;
+     
+      $.get(url, function( data ) {
+        var json = JSON.parse(data);
+        $('#response').append(json.time + ' '+json.msg + '<br>');
+      });
+    }
   </script>
+
   <script type="text/javascript">
+    // códigos da criação do web worker
     var worker = new Worker('js/workerSort.js');
     
     function executarWebWorker() {
@@ -150,9 +163,9 @@
       var e = document.getElementById("op");
       var op = e.options[e.selectedIndex].value;
 
-        for (var i=0; i < repetir; i++){
-      	worker.postMessage({'quantidade': quantidade, 'op': op, 'execucaoN': i});
-    	}
+      for (var i=0; i < repetir; i++){
+        worker.postMessage({'quantidade': quantidade, 'op': op, 'execucaoN': i});
+      }
     }
 
     worker.onerror = function() {
@@ -161,30 +174,18 @@
 
     // Evento executado ao receber uma mensagem do web worker            
     worker.onmessage = function(e) {
-      //result.textContent = e.data;
       console.log('Message received from worker');
-      //document.getElementById('result').textContent = e.data[0];
-      //$('#resultado').show();
 
       $('#tabelaResultado').show();
       // adicionando os resultados no html
+      // só intessa os tempos para executar as tarefas
       $('#resultado').append('<tr><td>worker '+ e.data['execucaoN'] +'</td><td>'+ e.data['bubbleSort'] +'</td><td>'+ e.data['selectionSort'] +'</td><td>'+ e.data['insertionSort'] +'</td><td>'+ e.data['mergeSort'] +'</td><td>'+ e.data['quickSort'] +'</td><td>'+ e.data['heapSort'] +'</td><td>'+ e.data['sort'] +'</td></tr>');
-      
     }
   </script>
   </head>
   <body>
     <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
       <h5 class="my-0 mr-md-auto font-weight-normal">Análise algoritmos de ordenação</h5>
-       <!--
-       <nav class="my-2 my-md-0 mr-md-3">
-       <a class="p-2 text-dark" href="#">Features</a>
-        <a class="p-2 text-dark" href="#">Enterprise</a>
-        <a class="p-2 text-dark" href="#">Support</a>
-        <a class="p-2 text-dark" href="#">Pricing</a>
-      </nav>
-      <a class="btn btn-outline-primary" href="#">Sign up</a>
-      -->
     </div>
     <div class="container">
       <div class="row">
@@ -238,7 +239,7 @@
                   <th>quickSort</th>
                   <th>heapSort</th>
                   <th>sort()</th>
-              </tr>
+                </tr>
               </thead>
               <tbody id="resultado"></tbody>
             </table>
@@ -246,9 +247,11 @@
         <!-- painel direito -->
         <div class="col-6">
             <h5>Interação com a página</h5>
-          	<form>
-            	<textarea class="form-control" id="numerosGerados" rows="3"></textarea>
+            <form>
+              <textarea class="form-control" id="msg" rows="3"></textarea>
+              <button type="button" class="btn btn-primary" onclick="request()">Enviar</button> 
           </form>
+          <p id="response"></p>
         </div>
       </div>
     </div>
@@ -256,7 +259,6 @@
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
     <script src="https://getbootstrap.com/docs/4.1/assets/js/vendor/popper.min.js"></script>
     <script src="http://getbootstrap.com/docs/4.1/dist/js/bootstrap.min.js"></script>
