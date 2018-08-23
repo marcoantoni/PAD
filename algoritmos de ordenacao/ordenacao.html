@@ -7,10 +7,10 @@
     <meta name="author" content="">
     <title>Medição do tempo dos algoritmos de ordenação</title>
     <!-- Bootstrap core CSS -->
-    <link href="http://getbootstrap.com/docs/4.1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
  
-    <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="js/algoritmos.js"></script>
 
     <script type="text/javascript">
@@ -132,6 +132,7 @@
         delete sort;
         delete sort_time;
 
+        $('#resultadoLabel').show();
         $('#tabelaResultado').show();
         // adicionando os resultados no html
         $('#resultado').append('<tr><td>'+ (i+1) +'</td><td>'+ bs_time +'</td><td>'+ ss_time +'</td><td>'+ is_time +'</td><td>'+ ms_time +'</td><td>'+ qs_time +'</td><td>'+ hs_time +'</td><td>'+ sort_time +'</td></tr>');
@@ -176,6 +177,7 @@
     worker.onmessage = function(e) {
       console.log('Message received from worker');
 
+      $('#resultadoLabel').show();
       $('#tabelaResultado').show();
       // adicionando os resultados no html
       // só intessa os tempos para executar as tarefas
@@ -215,8 +217,8 @@
                   </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <button type="button" class="btn btn-warning" onclick="executar()">Iniciar testes</button>
-                    <button type="button" class="btn btn-success" onclick="executarWebWorker()">Iniciar testes com WW</button>
+                    <button type="button" class="btn btn-danger" onclick="executar()">Iniciar testes thread window</button>
+                    <button type="button" class="btn btn-success" onclick="executarWebWorker()">Iniciar testes Web Worker</button>
                     <button type="button" class="btn btn-primary" onclick="limparTela()">Limpar tela</button> 
                   </div>
                 </div>
@@ -224,51 +226,48 @@
             </form>
             <br>
             <h5 id="numerosGeradosLabel">Números gerados:</h5>
-            <textarea class="form-control" id="numerosGerados" rows="3"></textarea>
-            <br>
-            <h5 id="resultadoLabel">Tempos de execução</h5>
-            <!-- contendo os tempos de execução -->
-            <table class="table table-bordered" id="tabelaResultado">
-              <thead class="thead-light">
-                <tr>
-                  <th>execução nº</th>
-                  <th>bubbleSort</th>
-                  <th>selectionSort</th>
-                  <th>insertionSort</th>
-                  <th>mergeSort</th>
-                  <th>quickSort</th>
-                  <th>heapSort</th>
-                  <th>sort()</th>
-                </tr>
-              </thead>
-              <tbody id="resultado"></tbody>
-            </table>
+            <textarea class="form-control" id="numerosGerados" rows="5"></textarea>
         </div>
         <!-- painel direito -->
         <div class="col-6">
             <h5>Interação com a página</h5>
             <form>
-              <textarea class="form-control" id="msg" rows="3"></textarea>
-              <button type="button" class="btn btn-primary" onclick="request()">Enviar</button> 
-          </form>
+              <div class="form-row">
+                <div class="form-group col-md-12">
+                  <textarea class="form-control" id="msg" rows="3"></textarea>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-12">
+                  <button type="button" class="btn btn-primary" onclick="request()">Enviar</button>
+                </div>
+              </div> 
+            </form>
           <p id="response"></p>
         </div>
       </div>
+      <div class="row">
+        <div class="col-12">
+          <br>
+          <h5 id="resultadoLabel">Tempos de execução</h5>
+          <!-- contendo os tempos de execução -->
+          <table class="table table-bordered" id="tabelaResultado">
+            <thead class="thead-light">
+              <tr>
+                <th>execução nº</th>
+                <th>bubbleSort</th>
+                <th>selectionSort</th>
+                <th>insertionSort</th>
+                <th>mergeSort</th>
+                <th>quickSort</th>
+                <th>heapSort</th>
+                <th>sort()</th>
+              </tr>
+            </thead>
+            <tbody id="resultado"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery-slim.min.js"><\/script>')</script>
-    <script src="https://getbootstrap.com/docs/4.1/assets/js/vendor/popper.min.js"></script>
-    <script src="http://getbootstrap.com/docs/4.1/dist/js/bootstrap.min.js"></script>
-    <script src="https://getbootstrap.com/docs/4.1/assets/js/vendor/holder.min.js"></script>
-    <script>
-      Holder.addTheme('thumb', {
-        bg: '#55595c',
-        fg: '#eceeef',
-        text: 'Thumbnail'
-      });
-    </script>
   </body>
 </html>
