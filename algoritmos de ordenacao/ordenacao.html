@@ -23,8 +23,6 @@
       }
     });
 
-
-
     function limparTela(){
       $('#numerosGerados').empty();
       $('#numerosGeradosLabel').hide();
@@ -155,27 +153,45 @@
   </script>
 
   <script type="text/javascript">
-    // códigos da criação do web worker
-    var worker = new Worker('js/workerSort.js');
+    var workerSort = new Worker('js/workerSort.js');
+    var workerGerador = new Worker('js/workerGerador.js');
     
     function executarWebWorker() {
+    
       var quantidade = document.getElementById ("quantidade").value;
-      var repetir = document.getElementById ("repetir").value;
       var e = document.getElementById("op");
       var op = e.options[e.selectedIndex].value;
 
-      for (var i=0; i < repetir; i++){
-        worker.postMessage({'quantidade': quantidade, 'op': op, 'execucaoN': i});
+      // gera os numeros através de outro worker
+      workerGerador.postMessage({'quantidade': quantidade, 'op': op}); 
+
+    }
+
+
+    // cria um orker para gerar o array numérico e o exibe na tela
+    // ao receber a resposta chama o worker responsável por executar os algoritmos
+    workerGerador.onmessage = function(e) {
+      
+      var numeros = e.data;
+   
+      $('#numerosGerados').empty();
+      $('#numerosGerados').show();
+      
+      for (var i=0; i<numeros.length; i++){
+        $('#numerosGerados').append(numeros[i]+',');
       }
+
+      // repete a execução do teste de acordo com o valor do campo repetir
+      var repetir = document.getElementById ("repetir").value;
+      for (i=1; i<=repetir; i++){
+        workerSort.postMessage({'numeros': numeros, 'execucaoN': i});
+      }
+
     }
 
-    worker.onerror = function() {
-      console.log('Ocorreu um erro!');
-    }
-
-    // Evento executado ao receber uma mensagem do web worker            
-    worker.onmessage = function(e) {
-      console.log('Message received from worker');
+    // Evento executado ao receber uma mensagem do workerSort
+    // apenas exibe os tempos de execução na tabela          
+    workerSort.onmessage = function(e) {
 
       $('#resultadoLabel').show();
       $('#tabelaResultado').show();
@@ -183,6 +199,18 @@
       // só intessa os tempos para executar as tarefas
       $('#resultado').append('<tr><td>worker '+ e.data['execucaoN'] +'</td><td>'+ e.data['bubbleSort'] +'</td><td>'+ e.data['selectionSort'] +'</td><td>'+ e.data['insertionSort'] +'</td><td>'+ e.data['mergeSort'] +'</td><td>'+ e.data['quickSort'] +'</td><td>'+ e.data['heapSort'] +'</td><td>'+ e.data['sort'] +'</td></tr>');
     }
+    
+    // evento executado ao receber um erro
+    workerGerador.onerror = function(e) {
+      console.log('workerGerador.onerror');
+      console.log('linha ' + e.lineno + ' em ' + e.filename);
+    }
+
+    workerSort.onerror = function(e) {
+      console.log('workerSort.onerror');
+      console.log('linha ' + e.lineno + ' em ' + e.filename);
+    }
+
   </script>
   </head>
   <body>
@@ -217,7 +245,7 @@
                   </div>
                 <div class="form-row">
                   <div class="form-group">
-                    <button type="button" class="btn btn-danger" onclick="executar()">Iniciar testes thread window</button>
+                    <button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executar()">Iniciar testes thread window</button>
                     <button type="button" class="btn btn-success" onclick="executarWebWorker()">Iniciar testes Web Worker</button>
                     <button type="button" class="btn btn-primary" onclick="limparTela()">Limpar tela</button> 
                   </div>
