@@ -33,7 +33,6 @@
       $('#tabelaResultado').hide();
     }  
 
-
     function executar(){
     
       var quantidade = document.getElementById ('quantidade').value;
@@ -43,16 +42,20 @@
 
       var numeros = [];
   
-    
       var numeros = gerar(quantidade, op);
 
-      $('#numerosGerados').empty();
-
-      for (var i=0; i<numeros.length; i++){
-        $('#numerosGerados').append(numeros[i]+',');
+      /* Código usado para exibir o array gerado na tela
+         causa congelamento na interface em arrays grandes
+      */ 
+      var selected = $('input[name=exibirArray]:checked').val();
+      if (selected === 'sim') {
+        $('#numerosGerados').empty();
+        $('#numerosGerados').show();
+        for (var i=0; i<numeros.length; i++){
+          $('#numerosGerados').append(numeros[i]+',');
+        }
       }
-      $('#numerosGerados').show();
-
+      
       var table = document.getElementById('resultado');
       for (var i=0; i < repetir; i++){
         console.log('Repetindo o teste pela ' + (i+1) + ' vez');
@@ -63,7 +66,7 @@
         var bs_time1 = performance.now();
         var bs_time =  calcularExecucao(bs_time0, bs_time1);// calcularExecucao(bs_time0, bs_time1);
 
-        console.log('Ordenação array com bubbleSort', bs_time, 'milliseconds to generate:');
+        //console.log('Ordenação array com bubbleSort', bs_time, 'milliseconds to generate:');
         delete bs;
         delete bs_time;
   
@@ -74,7 +77,7 @@
         var ss_time1 = performance.now();
         var ss_time =  calcularExecucao(ss_time0, ss_time1);
 
-        console.log('Ordenação array com selectionSort', ss_time, 'milliseconds to generate:');
+        //console.log('Ordenação array com selectionSort', ss_time, 'milliseconds to generate:');
         delete ss;
         delete ss_time;
         
@@ -85,7 +88,7 @@
         var is_time1 = performance.now();
         var is_time = calcularExecucao(is_time0, is_time1);
 
-        console.log('Ordenação array com insertionSort', is_time, 'milliseconds to generate:');
+        //console.log('Ordenação array com insertionSort', is_time, 'milliseconds to generate:');
         delete is;
         delete is_time;
 
@@ -95,27 +98,27 @@
         var ms_time1 = performance.now()
         var ms_time =  calcularExecucao(ms_time0, ms_time1);
 
-        console.log('Ordenação array com mergeSort', ms_time, 'milliseconds to generate:');
+        //console.log('Ordenação array com mergeSort', ms_time, 'milliseconds to generate:');
         delete ms;
         delete ms_time;
 
         // execucao do quick sort
         var qs_time0 = performance.now(); 
-        var qs = quickSort(numeros, 0, 50 );
+        var qs = quickSort(numeros, 0, 50);
         var qs_time1 = performance.now()
         var qs_time =  calcularExecucao(qs_time0, qs_time1);
 
-        console.log('Ordenação array com quickSort', qs_time, 'milliseconds to generate:');
+        //console.log('Ordenação array com quickSort', qs_time, 'milliseconds to generate:');
         delete ms;
         delete ms_time;
 
         // execucao do heap sort
         var hs_time0 = performance.now(); 
-        var qs = heapSort(numeros);
+        var hs = heapSort(numeros);
         var hs_time1 = performance.now()
         var hs_time =  calcularExecucao(hs_time0, hs_time1);
 
-        console.log('Ordenação array com heapSort', hs_time, 'milliseconds to generate:');
+        //console.log('Ordenação array com heapSort', hs_time, 'milliseconds to generate:');
         delete hs;
         delete hs_time;
 
@@ -126,7 +129,7 @@
         var sort_time1 = performance.now();
         var sort_time =  calcularExecucao(sort_time0, sort_time1);
   
-        console.log('Ordenação array usando sort()', sort_time, 'milliseconds to generate:');
+        //console.log('Ordenação array usando sort()', sort_time, 'milliseconds to generate:');
         delete sort;
         delete sort_time;
 
@@ -136,7 +139,6 @@
         $('#resultado').append('<tr><td>'+ (i+1) +'</td><td>'+ bs_time +'</td><td>'+ ss_time +'</td><td>'+ is_time +'</td><td>'+ ms_time +'</td><td>'+ qs_time +'</td><td>'+ hs_time +'</td><td>'+ sort_time +'</td></tr>');
       }
     }
-
     /*  realiza uma requisição ajax para um  
         endereço e exibe a tela a esposta recebida
     */
@@ -173,12 +175,17 @@
     workerGerador.onmessage = function(e) {
       
       var numeros = e.data;
-   
-      $('#numerosGerados').empty();
-      $('#numerosGerados').show();
-      
-      for (var i=0; i<numeros.length; i++){
-        $('#numerosGerados').append(numeros[i]+',');
+        
+      /* Código usado para exibir o array gerado na tela
+         causa congelamento na interface em arrays grandes
+      */ 
+      var selected = $('input[name=exibirArray]:checked').val();
+      if (selected === 'sim') {
+        $('#numerosGerados').empty();
+        $('#numerosGerados').show();
+        for (var i=0; i<numeros.length; i++){
+          $('#numerosGerados').append(numeros[i]+',');
+        }
       }
 
       // repete a execução do teste de acordo com o valor do campo repetir
@@ -223,26 +230,41 @@
           <div class="col-6">
             <form id="form" onsubmit="return false">
               <div class="form-row">
-                <div class="form-group">
+                <div class="form-group col-md-6">
                   <label for="quantidade"> Quantidade de itens no array</label>
                   <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="1000">
                   <small id="emailHelp" class="form-text text-muted"></small>
                 </div>
+                <div class="form-group col-md-6">
+                  <label for="quantidade">Repetir o teste</label>
+                  <input type="number" class="form-control" name="repetir" id="repetir" aria-describedby="" placeholder="" value="1">
+                  <small id="emailHelp" class="form-text text-muted"></small>
+                </div>
               </div>
               <div class="form-row">
-                  <div class="form-group col-md-8">
-                    <label for="quantidade">Repetir o teste</label>
-                    <input type="number" class="form-control" name="repetir" id="repetir" aria-describedby="" placeholder="" value="1">
-                    <small id="emailHelp" class="form-text text-muted"></small>
+                <div class="form-group col-md-6">
+                  <label for="inputState">Ordenar no</label>
+                    <select id="op" class="form-control">
+                      <option value=1>melhor caso</option>
+                      <option value=2>pior caso</option>
+                      <option value=3>aleatório</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="inputState">Exibir array gerado</label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="exibirArray" id="exibirArrayBtnChecked" value="sim">
+                    <label class="form-check-label" for="exampleRadios1">
+                      Sim
+                    </label>
                   </div>
-                  <div class="form-group col-md-4">
-                    <label for="inputState">Ordenar no</label>
-                      <select id="op" class="form-control">
-                        <option value=1>melhor caso</option>
-                        <option value=2>pior caso</option>
-                        <option value=3>aleatório</option>
-                    </select>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="exibirArray" value="nao" checked>
+                    <label class="form-check-label" for="exampleRadios2">
+                      Não
+                    </label>
                   </div>
+                </div>
                 <div class="form-row">
                   <div class="form-group">
                     <button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executar()">Iniciar testes thread window</button>

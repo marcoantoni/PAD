@@ -5,8 +5,8 @@ self.addEventListener('message', function(e) {
   var data = e.data;
   numeros = data.numeros;
   var tempos = [];
-  //console.log('workerSort: array recebido');
-  //console.log(data.numeros);
+  console.log('workerSort: array recebido');
+  console.log(data.numeros);
 
   //execucao do bubble sort
 
@@ -60,7 +60,7 @@ self.addEventListener('message', function(e) {
   // execucao do heap sort
 
   var hs_time0 = performance.now(); 
-  qs = heapSort(numeros);
+  hs = heapSort(numeros);
   var hs_time1 = performance.now()
   var hs_time =  calcularExecucao(hs_time0, hs_time1);
 
