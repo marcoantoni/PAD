@@ -203,5 +203,5 @@ function siftDown(arr, start, end){
 
     
     function calcularExecucao(t0, t1){
-      return (t1 - t0).toFixed(10);
+      return (t1 - t0).toFixed(4);
     }
