@@ -5,8 +5,8 @@ self.addEventListener('message', function(e) {
   var data = e.data;
   numeros = data.numeros;
   var tempos = [];
-  console.log('workerSort: array recebido');
-  console.log(data.numeros);
+  //console.log('workerSort: array recebido');
+  //console.log(data.numeros);
 
   //execucao do bubble sort
 
