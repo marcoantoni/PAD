@@ -14,49 +14,47 @@
     <script type="text/javascript" src="js/algoritmos.js"></script>
     <script type="text/javascript">
 
-    function limparTela(){
-      $('#tabelaResultado').hide();
-      $('#resultado').empty();
-    }
+      function limparTela(){
+        $('#tabelaResultado').hide();
+        $('#resultado').empty();
+      }
 
     	var intervalos = [];
-      
-      function executar(){
+    
+      var workerPrimos = new Worker('js/workerPrimos.js');
+
+      function executarWebWorker(){
+
         var quantidade = $('#quantidade').val();
         var quantidade_ww = $('#quantidade_ww').val();
-   			var soma = 0;
-   			var divisao = quantidade / quantidade_ww;
+        var soma = 0;
+        var divisao = quantidade / quantidade_ww;
 
         // quebra os intervalos de acordo com a quantidade de web worker em partes iguais
-    		if (quantidade % quantidade_ww == 0){
-    			for (var i=0; i<quantidade_ww; i++){
-    				soma = soma + divisao;
-    				intervalos.push(soma);
-    			}
-    		} 
+        if (quantidade % quantidade_ww == 0){
+          for (var i=0; i<quantidade_ww; i++){
+            soma = soma + divisao;
+            intervalos.push(soma);
+          }
+        } 
+
         // se a divisão não for igual
         // primeiras partes arredonda para baixo
         // ultimo segmento contem o resto dos valores
         else {
-    			for (var i=0; i<quantidade_ww; i++){
-    				// arredonda todos os segmentos para baixo
-    				if (i == (quantidade_ww - 1)) {
-    					soma = quantidade;
-    				} else {
-    					soma = soma + Math.floor(quantidade / quantidade_ww)
-    				}
+          for (var i=0; i<quantidade_ww; i++){
+            // arredonda todos os segmentos para baixo
+            if (i == (quantidade_ww - 1)) {
+              soma = quantidade;
+            } else {
+              soma = soma + Math.floor(quantidade / quantidade_ww)
+            }
 
-    			intervalos.push(soma);
-    		}
-    	}
-      executarWebWorker();
-    }
-    
-    var workerPrimos = new Worker('js/workerPrimos.js');
+          intervalos.push(soma);
+        }
+      }
 
-    function executarWebWorker(){
-
-
+      // chama os web worker passando o inicio e fim de cada segmento em que deve procurar os números
       for (var i=0; i<intervalos.length; i++){
         if (i == 0){
           var inicio = 0;
@@ -68,12 +66,9 @@
 
         workerPrimos.postMessage({'inicio': inicio, 'fim': fim}); 
       }
-
     }
 
-  
-    // cria um orker para gerar o array numérico e o exibe na tela
-    // ao receber a resposta chama o worker responsável por executar os algoritmos
+    // evento executado ao receber uma resposta do worker
     workerPrimos.onmessage = function(e) {
       //console.log('inicio: ' + e.data.inicio);
       //console.log('fim: ' + e.data.fim);
@@ -81,7 +76,6 @@
       $('#resultado').append('<tr><td>'+ e.data.inicio +'</td><td>'+ e.data.fim +'</td><td>'+ e.data.primes + '</td><td>'+ e.data.execucao +' ms</td></tr>');
       
       //$('#resultado').append(':' + e.data.inicio + 'Fim:' + e.data.fim + 'Encontrados:' + e.data.primes + '<br>');
-      
     }
 
 
@@ -90,6 +84,35 @@
       console.log('workerPrimos.onerror');
       console.log('linha ' + e.lineno + ' em ' + e.filename);
     }
+
+    function executarSemWebWorker() {
+      var fim = $('#quantidade').val();
+      var t0 = performance.now();
+      // create an Array to list all numbers within the specified range.
+      var list = [];
+      for (var i=2; i<=fim; i++) {
+        if (i>1) list.push(i);
+      }
+
+      // check if the no's are primeNos
+      var maxDiv = Math.round(Math.sqrt(fim));
+      var primes = [];
+
+      for (var i=0; i<list.length; i++) {
+        var failed = false;
+        for (var j=2; j<=maxDiv; j++) {
+          if ((list[i] != j) && (list[i] % j == 0)) {
+            failed = true;
+          } else if ((j==maxDiv) && (failed == false)) {
+            primes.push(list[i]);
+          }
+        }
+      }
+      var t1 = performance.now();
+      var execucao = calcularExecucao(t0, t1);
+      $('#resultado').append('<tr><td>0</td><td>'+ fim +'</td><td>'+ primes + '</td><td>'+ execucao +' ms</td></tr>');
+    }
+
 
     </script>
   </head>
@@ -117,7 +140,7 @@
               <div class="form-row">
                 <div class="form-row">
                   <div class="form-group">
-                    <button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executar()">Iniciar testes thread window</button>
+                    <button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executarSemWebWorker()">Iniciar testes thread window</button>
                     <button type="button" class="btn btn-success" onclick="executarWebWorker()">Iniciar testes Web Worker</button>
                     <button type="button" class="btn btn-primary" onclick="limparTela()">Limpar tela</button> 
                   </div>
