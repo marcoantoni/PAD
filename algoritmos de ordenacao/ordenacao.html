@@ -90,8 +90,19 @@
 
         //console.log('Ordenação array com insertionSort', is_time, 'milliseconds to generate:');
         delete is;
-        delete is_time;
+        delete is_time;       
 
+        // execucao do shell sort
+
+        var shs_time0 = performance.now();
+        shs = shellSort(numeros);
+        var shs_time1 = performance.now();
+        var shs_time = calcularExecucao(shs_time0, shs_time1);
+        console.log('saida: ' + shs);
+        //console.log('Ordenação array com shellSort', is_time, 'milliseconds to generate:');
+        delete shs;
+        delete shs_time;
+      
         // execucao do merge sort
         var ms_time0 = performance.now();
         ms = mergeSort(numeros); 
@@ -136,22 +147,10 @@
         $('#resultadoLabel').show();
         $('#tabelaResultado').show();
         // adicionando os resultados no html
-        $('#resultado').append('<tr><td>'+ (i+1) +'</td><td>'+ bs_time +'</td><td>'+ ss_time +'</td><td>'+ is_time +'</td><td>'+ ms_time +'</td><td>'+ qs_time +'</td><td>'+ hs_time +'</td><td>'+ sort_time +'</td></tr>');
+        $('#resultado').append('<tr><td>'+ (i+1) +'</td><td>'+ bs_time +'</td><td>'+ ss_time +'</td><td>'+ is_time +'</td>><td>'+ shs_time +'</td><td>'+ ms_time +'</td><td>'+ qs_time +'</td><td>'+ hs_time +'</td><td>'+ sort_time +'</td></tr>');
       }
     }
-    /*  realiza uma requisição ajax para um  
-        endereço e exibe a tela a esposta recebida
-    */
-    function request(){
-
-      var msg = $('#msg').val();
-      var url = 'http://191.36.58.12/retorno/' + msg;
-     
-      $.get(url, function( data ) {
-        var json = JSON.parse(data);
-        $('#response').append(json.time + ' '+json.msg + '<br>');
-      });
-    }
+    
   </script>
 
   <script type="text/javascript">
@@ -204,7 +203,7 @@
       $('#tabelaResultado').show();
       // adicionando os resultados no html
       // só intessa os tempos para executar as tarefas
-      $('#resultado').append('<tr><td>worker '+ e.data['execucaoN'] +'</td><td>'+ e.data['bubbleSort'] +'</td><td>'+ e.data['selectionSort'] +'</td><td>'+ e.data['insertionSort'] +'</td><td>'+ e.data['mergeSort'] +'</td><td>'+ e.data['quickSort'] +'</td><td>'+ e.data['heapSort'] +'</td><td>'+ e.data['sort'] +'</td></tr>');
+      $('#resultado').append('<tr><td>worker '+ e.data['execucaoN'] +'</td><td>'+ e.data['bubbleSort'] +'</td><td>'+ e.data['selectionSort'] +'</td><td>'+ e.data['insertionSort'] +'</td><td>'+ e.data['shellSort'] +'</td><td>'+ e.data['mergeSort'] +'</td><td>'+ e.data['quickSort'] +'</td><td>'+ e.data['heapSort'] +'</td><td>'+ e.data['sort'] +'</td></tr>');
     }
     
     // evento executado ao receber um erro
@@ -308,6 +307,7 @@
                 <th>bubbleSort</th>
                 <th>selectionSort</th>
                 <th>insertionSort</th>
+                <th>shellSort</th>
                 <th>mergeSort</th>
                 <th>quickSort</th>
                 <th>heapSort</th>

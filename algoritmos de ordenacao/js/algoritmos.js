@@ -259,33 +259,72 @@ function siftDown(arr, start, end){
     }
     return array;
   };
-        
+  
+  function shellSort(arr) {
+    var increment = arr.length / 2;
+    
+    while (increment > 0) {
+      for (i = increment; i < arr.length; i++) {
+        var j = i;
+        var temp = arr[i];
 
-function gerar(quantidade, op){
-
-  var numeros = [];
-     
-  // melhor caso
-  if (op == 1){
-    for (var i=0; i<quantidade; i++){
-      numeros.push(i);
+        while (j >= increment && arr[j-increment] > temp) {
+            arr[j] = arr[j-increment];
+            j = j - increment;
+        }
+        arr[j] = temp;
+      }
+    
+      if (increment == 2) {
+          increment = 1;
+      } else {
+          increment = parseInt(increment*5 / 11);
+      }
     }
-  } 
-  if (op == 2){
-    for (var i=quantidade; i>0; i--){
-      numeros.push(i);
-    }
+    return arr;
   }
-  if (op == 3){
-    for (var i=0; i<quantidade; i++){
-      numeros.push(Math.floor(Math.random() * quantidade + 1));
+
+
+  function gerar(quantidade, op){
+
+    var numeros = [];
+       
+    // melhor caso
+    if (op == 1){
+      for (var i=0; i<quantidade; i++){
+        numeros.push(i);
+      }
+    } 
+    if (op == 2){
+      for (var i=quantidade; i>0; i--){
+        numeros.push(i);
+      }
     }
+    if (op == 3){
+      for (var i=0; i<quantidade; i++){
+        numeros.push(Math.floor(Math.random() * quantidade + 1));
+      }
+    }
+
+    return numeros;
   }
 
-  return numeros;
-}
+
+  function calcularExecucao(t0, t1){
+    return (t1 - t0).toFixed(4);
+  }
 
 
-function calcularExecucao(t0, t1){
-  return (t1 - t0).toFixed(4);
-}
+  /*  realiza uma requisição ajax para um  
+      endereço e exibe a tela a esposta recebida
+  */
+  function request(){
+
+    var msg = $('#msg').val();
+    var url = 'http://191.36.58.12/retorno/' + msg;
+   
+    $.get(url, function( data ) {
+      var json = JSON.parse(data);
+      $('#response').append(json.time + ' '+json.msg + '<br>');
+    });
+  }
