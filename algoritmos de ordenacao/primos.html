@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Encontrar números primos</title>
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for this template -->
+ 
+    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="js/algoritmos.js"></script>
+    <script type="text/javascript">
+
+    function limparTela(){
+      $('#tabelaResultado').hide();
+      $('#resultado').empty();
+    }
+
+    	var intervalos = [];
+      
+      function executar(){
+        var quantidade = $('#quantidade').val();
+        var quantidade_ww = $('#quantidade_ww').val();
+   			var soma = 0;
+   			var divisao = quantidade / quantidade_ww;
+
+        // quebra os intervalos de acordo com a quantidade de web worker em partes iguais
+    		if (quantidade % quantidade_ww == 0){
+    			for (var i=0; i<quantidade_ww; i++){
+    				soma = soma + divisao;
+    				intervalos.push(soma);
+    			}
+    		} 
+        // se a divisão não for igual
+        // primeiras partes arredonda para baixo
+        // ultimo segmento contem o resto dos valores
+        else {
+    			for (var i=0; i<quantidade_ww; i++){
+    				// arredonda todos os segmentos para baixo
+    				if (i == (quantidade_ww - 1)) {
+    					soma = quantidade;
+    				} else {
+    					soma = soma + Math.floor(quantidade / quantidade_ww)
+    				}
+
+    			intervalos.push(soma);
+    		}
+    	}
+      executarWebWorker();
+    }
+    
+    var workerPrimos = new Worker('js/workerPrimos.js');
+
+    function executarWebWorker(){
+
+
+      for (var i=0; i<intervalos.length; i++){
+        if (i == 0){
+          var inicio = 0;
+        } else {
+          var inicio = intervalos[i-1] + 1;
+        }
+
+        var fim = intervalos[i];
+
+        workerPrimos.postMessage({'inicio': inicio, 'fim': fim}); 
+      }
+
+    }
+
+  
+    // cria um orker para gerar o array numérico e o exibe na tela
+    // ao receber a resposta chama o worker responsável por executar os algoritmos
+    workerPrimos.onmessage = function(e) {
+      //console.log('inicio: ' + e.data.inicio);
+      //console.log('fim: ' + e.data.fim);
+      //console.log('primes: ' + e.data.primes);
+      $('#resultado').append('<tr><td>'+ e.data.inicio +'</td><td>'+ e.data.fim +'</td><td>'+ e.data.primes + '</td><td>'+ e.data.execucao +' ms</td></tr>');
+      
+      //$('#resultado').append(':' + e.data.inicio + 'Fim:' + e.data.fim + 'Encontrados:' + e.data.primes + '<br>');
+      
+    }
+
+
+    // evento executado ao receber um erro
+    workerPrimos.onerror = function(e) {
+      console.log('workerPrimos.onerror');
+      console.log('linha ' + e.lineno + ' em ' + e.filename);
+    }
+
+    </script>
+  </head>
+  <body>
+    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+      <h5 class="my-0 mr-md-auto font-weight-normal">Encontrar números primos</h5>
+    </div>
+    <div class="container">
+      <div class="row">
+          <!-- painel esquerdo -->
+          <div class="col-6">
+            <form id="form" onsubmit="return false">
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label for="quantidade"> Encontrar números até</label>
+                  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="100">
+                  <small id="emailHelp" class="form-text text-muted"></small>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="quantidade_ww">Quantidade web worker</label>
+                  <input type="number" class="form-control" name="quantidade_ww" id="quantidade_ww" aria-describedby="" placeholder="" value="3">
+                  <small id="emailHelp" class="form-text text-muted"></small>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-row">
+                  <div class="form-group">
+                    <button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executar()">Iniciar testes thread window</button>
+                    <button type="button" class="btn btn-success" onclick="executarWebWorker()">Iniciar testes Web Worker</button>
+                    <button type="button" class="btn btn-primary" onclick="limparTela()">Limpar tela</button> 
+                  </div>
+                </div>
+              </div>
+            </form>
+            <table class="table table-bordered" id="tabelaResultado">
+            <thead class="thead-light">
+              <tr>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Encontrados</th>
+                <th>Tempo em ms</th>
+              </tr>
+            </thead>
+            <tbody id="resultado"></tbody>
+          </table>
+        </div>
+
+        <!-- painel direito -->
+        <div class="col-6">
+            <h5>Interação com a página</h5>
+            <form>
+              <div class="form-row">
+                <div class="form-group col-md-12">
+                  <textarea class="form-control" id="msg" rows="3"></textarea>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-12">
+                  <button type="button" class="btn btn-primary" onclick="request()">Enviar</button>
+                </div>
+              </div> 
+            </form>
+          <p id="response"></p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-12">
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

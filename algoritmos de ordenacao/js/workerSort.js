@@ -36,6 +36,16 @@ self.addEventListener('message', function(e) {
 
   //console.log('Ordenação array com insertionSort', is_time, 'milliseconds to generate:');
 
+  // execucao do shell sort
+
+  var shs_time0 = performance.now();
+  shs = shellSort(numeros);
+  var shs_time1 = performance.now();
+  var shs_time = calcularExecucao(shs_time0, shs_time1);
+
+  //console.log('Ordenação array com shellSort', is_time, 'milliseconds to generate:');
+  delete shs;
+  delete shs_time;
 
   // execucao do merge sort
 
@@ -78,6 +88,6 @@ self.addEventListener('message', function(e) {
 
 
   // retorna a mensagem para a thread windows
-  self.postMessage({'execucaoN': data.execucaoN, 'bubbleSort': bs_time, 'selectionSort': ss_time, 'insertionSort': is_time, 'mergeSort': ms_time, 'quickSort': qs_time, 'heapSort': hs_time, 'sort': sort_time});
+  self.postMessage({'execucaoN': data.execucaoN, 'bubbleSort': bs_time, 'selectionSort': ss_time, 'insertionSort': is_time, 'shellSort': shs_time, 'mergeSort': ms_time, 'quickSort': qs_time, 'heapSort': hs_time, 'sort': sort_time});
 
 }, false);
