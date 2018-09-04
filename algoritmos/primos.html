@@ -13,17 +13,26 @@
     <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="js/algoritmos.js"></script>
     <script type="text/javascript">
+    
+      $(document).ready(function() {
+
+        limparTela();
+        if (!window.Worker){
+          alert('Seu navegador não suporta web workers');
+        }
+      });
 
       function limparTela(){
+        $('#response').empty();
         $('#tabelaResultado').hide();
         $('#resultado').empty();
       }
 
     	var intervalos = [];
+      var tempo_total = 0;
     
-      var workerPrimos = new Worker('js/workerPrimos.js');
-
       function executarWebWorker(){
+        var workerPrimos = new Worker('js/workerPrimos.js');
 
         var quantidade = $('#quantidade').val();
         var quantidade_ww = $('#quantidade_ww').val();
@@ -37,16 +46,13 @@
             intervalos.push(soma);
           }
         } 
-
-        // se a divisão não for igual
-        // primeiras partes arredonda para baixo
-        // ultimo segmento contem o resto dos valores
+        // se a divisão não for igual primeiras partes arredonda para baixo ultimo segmento contem o resto dos valores
         else {
           for (var i=0; i<quantidade_ww; i++){
-            // arredonda todos os segmentos para baixo
             if (i == (quantidade_ww - 1)) {
               soma = quantidade;
             } else {
+              // arredonda todos os segmentos para baixo
               soma = soma + Math.floor(quantidade / quantidade_ww)
             }
 
@@ -59,30 +65,33 @@
         if (i == 0){
           var inicio = 0;
         } else {
+          // inicio = fim intervalo anterior + 1
           var inicio = intervalos[i-1] + 1;
         }
 
         var fim = intervalos[i];
 
         workerPrimos.postMessage({'inicio': inicio, 'fim': fim}); 
+        $('#tabelaResultado').show();
       }
-    }
 
-    // evento executado ao receber uma resposta do worker
-    workerPrimos.onmessage = function(e) {
-      //console.log('inicio: ' + e.data.inicio);
-      //console.log('fim: ' + e.data.fim);
-      //console.log('primes: ' + e.data.primes);
-      $('#resultado').append('<tr><td>'+ e.data.inicio +'</td><td>'+ e.data.fim +'</td><td>'+ e.data.primes + '</td><td>'+ e.data.execucao +' ms</td></tr>');
-      
-      //$('#resultado').append(':' + e.data.inicio + 'Fim:' + e.data.fim + 'Encontrados:' + e.data.primes + '<br>');
-    }
+      // evento executado ao receber uma resposta do worker
+      workerPrimos.onmessage = function(e) {
+        $('#resultado').append('<tr><td>'+ e.data.inicio +'</td><td>'+ e.data.fim +'</td><td>'+ e.data.primes.length +'</td><td>'+ e.data.execucao +' ms</td></tr>');
+        
+        var selected = $('input[name=exibirEncontrados]:checked').val();
+        if (selected === 'sim') {
+          console.log('Intervalo ' + e.data.inicio +':'+e.data.fim + ' ' + e.data.primes);
+        }
+      }
 
 
-    // evento executado ao receber um erro
-    workerPrimos.onerror = function(e) {
-      console.log('workerPrimos.onerror');
-      console.log('linha ' + e.lineno + ' em ' + e.filename);
+      // evento executado ao receber um erro
+      workerPrimos.onerror = function(e) {
+        console.log('workerPrimos.onerror');
+        console.log('linha ' + e.lineno + ' em ' + e.filename);
+      }
+
     }
 
     function executarSemWebWorker() {
@@ -110,7 +119,8 @@
       }
       var t1 = performance.now();
       var execucao = calcularExecucao(t0, t1);
-      $('#resultado').append('<tr><td>0</td><td>'+ fim +'</td><td>'+ primes + '</td><td>'+ execucao +' ms</td></tr>');
+      $('#tabelaResultado').show();
+      $('#resultado').append('<tr><td>0</td><td>'+ fim +'</td><td>'+ primes.length +'</td><td>'+ execucao +' ms</td></tr>');
     }
 
 
@@ -126,15 +136,30 @@
           <div class="col-6">
             <form id="form" onsubmit="return false">
               <div class="form-row">
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                   <label for="quantidade"> Encontrar números até</label>
-                  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="100">
+                  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="6000000">
                   <small id="emailHelp" class="form-text text-muted"></small>
                 </div>
-                <div class="form-group col-md-6">
+                <div class="form-group col-md-4">
                   <label for="quantidade_ww">Quantidade web worker</label>
                   <input type="number" class="form-control" name="quantidade_ww" id="quantidade_ww" aria-describedby="" placeholder="" value="3">
                   <small id="emailHelp" class="form-text text-muted"></small>
+                </div>
+                <div class="col-md-4">
+                  <label for="inputState">Exibir resultado</label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="exibirEncontrados" id="exibirEncontradosBtnChecked" value="sim">
+                    <label class="form-check-label" for="exampleRadios1">
+                      Sim
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="exibirEncontrados" value="nao" checked>
+                    <label class="form-check-label" for="exampleRadios2">
+                      Não
+                    </label>
+                  </div>
                 </div>
               </div>
               <div class="form-row">
@@ -148,15 +173,15 @@
               </div>
             </form>
             <table class="table table-bordered" id="tabelaResultado">
-            <thead class="thead-light">
-              <tr>
-                <th>Início</th>
-                <th>Fim</th>
-                <th>Encontrados</th>
-                <th>Tempo em ms</th>
-              </tr>
-            </thead>
-            <tbody id="resultado"></tbody>
+              <thead class="thead-light">
+                <tr>
+                  <th>Início</th>
+                  <th>Fim</th>
+                  <th>Encontrados</th>
+                  <th>Tempo em ms</th>
+                </tr>
+              </thead>
+              <tbody id="resultado"></tbody>
           </table>
         </div>
 
