@@ -28,40 +28,64 @@
         $('#resultado').empty();
       }
 
-    	var intervalos = [];
+    	
       var tempo_total = 0;
-    
-      function executarWebWorker(){
-        var workerPrimos = new Worker('js/workerPrimos.js');
-
-        var quantidade = $('#quantidade').val();
-        var quantidade_ww = $('#quantidade_ww').val();
-        var soma = 0;
-        var divisao = quantidade / quantidade_ww;
+      
+      function dividir(valor, partes) {
+        var intervalos = [];
+        var inicio;
+        var fim = 0;
+        var divisao = valor / partes;
 
         // quebra os intervalos de acordo com a quantidade de web worker em partes iguais
-        if (quantidade % quantidade_ww == 0){
-          for (var i=0; i<quantidade_ww; i++){
-            soma = soma + divisao;
-            intervalos.push(soma);
+        if (valor % partes == 0){
+          for (var i=0; i<partes; i++){
+            // primeiro elemento elemento do intervalo é 0
+            if (i == 0) {
+              inicio = 0;
+            } else {
+              inicio = fim + 1;
+            }
+            fim = fim + divisao;
+            intervalos.push(inicio + '-' + fim);
           }
         } 
-        // se a divisão não for igual primeiras partes arredonda para baixo ultimo segmento contem o resto dos valores
+          // se a divisão não for igual primeiras partes arredonda para baixo ultimo segmento contem o resto dos valores
         else {
-          for (var i=0; i<quantidade_ww; i++){
-            if (i == (quantidade_ww - 1)) {
-              soma = quantidade;
+          for (var i=0; i<partes; i++){
+            // primeiro elemento elemento do intervalo é 0
+            if (i == 0) {
+              inicio = 0;
             } else {
-              // arredonda todos os segmentos para baixo
-              soma = soma + Math.floor(quantidade / quantidade_ww)
+              inicio = fim + 1;
             }
 
-          intervalos.push(soma);
+            // testa o ultimo trecho do array
+            if (i == (partes - 1)) {
+              fim = parseInt(valor);
+            } else {
+              // arredonda todos os segmentos para baixo quando não for a última posição
+              fim = fim + Math.floor(valor / partes)
+            }
+            intervalos.push(inicio + '-' + fim);
+          }
         }
+        return intervalos;
       }
 
+      function executarWebWorker(){
+        var quantidade = $('#quantidade').val();
+        var quantidade_ww = $('#quantidade_ww').val();
+
+        var intervalos = dividir(quantidade, quantidade_ww);
+        console.log(intervalos);
+
+        var workerPrimos = new Worker('js/workerPrimos.js');
+
+
+
       // chama os web worker passando o inicio e fim de cada segmento em que deve procurar os números
-      for (var i=0; i<intervalos.length; i++){
+     /* for (var i=0; i<intervalos.length; i++){
         if (i == 0){
           var inicio = 0;
         } else {
@@ -70,8 +94,9 @@
         }
 
         var fim = intervalos[i];
-
+       
         workerPrimos.postMessage({'inicio': inicio, 'fim': fim}); 
+        
         $('#tabelaResultado').show();
       }
 
@@ -90,13 +115,14 @@
       workerPrimos.onerror = function(e) {
         console.log('workerPrimos.onerror');
         console.log('linha ' + e.lineno + ' em ' + e.filename);
-      }
+      }*/
 
     }
 
     function executarSemWebWorker() {
       var fim = $('#quantidade').val();
       var t0 = performance.now();
+      console.time("primos");
       // create an Array to list all numbers within the specified range.
       var list = [];
       for (var i=2; i<=fim; i++) {
@@ -117,6 +143,7 @@
           }
         }
       }
+      console.timeEnd("primos");
       var t1 = performance.now();
       var execucao = calcularExecucao(t0, t1);
       $('#tabelaResultado').show();
