@@ -90,7 +90,7 @@
 			var quantidade_ww = $('#quantidade_ww').val();
 			var repetir = $('#repetir').val();
 
-			var status = false;
+		/*	var status = false;
 			var repId = 0;
 			do {
 				var status = executarWebWorker(quantidade, quantidade_ww, repId);
@@ -103,10 +103,10 @@
 
 				}
 			} while (repId < repetir)
-
-//			for (var repId=0; repId<repetir; repId++){
-//				executarWebWorker(quantidade, quantidade_ww, repId);	
-//			}
+*/
+			for (var repId=0; repId<repetir; repId++){
+				executarWebWorker(quantidade, quantidade_ww, repId);	
+			}
 		}
 
 
