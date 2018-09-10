@@ -6,12 +6,15 @@ self.addEventListener('message', function(e) {
   var data = e.data;
   var inicio = data.inicio;
   var fim = data.fim;
+  var workerId = data.workerId;
   
   var t0 = performance.now();
  // create an Array to list all numbers within the specified range.
   var list = [];
   for (var i=inicio; i<=fim; i++) {
-    if (i>1) list.push(i);
+    if (i>1){ list.push(i); 
+    //  console.log(i);
+    }
   }
 
   // check if the no's are primeNos
@@ -42,9 +45,6 @@ self.addEventListener('message', function(e) {
     }
   }*/
 
-
-
-
-  self.postMessage({'inicio': inicio, 'fim': fim, primes, execucao});
+  this.postMessage({'inicio': inicio, 'fim': fim, primes, execucao, workerId});
 
 }, false);
