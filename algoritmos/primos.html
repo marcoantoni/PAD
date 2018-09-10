@@ -1,239 +1,272 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <title>Encontrar números primos</title>
-    <!-- Bootstrap core CSS -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<title>Encontrar números primos</title>
+	<!-- Bootstrap core CSS -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<!-- Custom styles for this template -->
  
-    <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
-    <script type="text/javascript" src="js/algoritmos.js"></script>
-    <script type="text/javascript">
-    
-      $(document).ready(function() {
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="js/algoritmos.js"></script>
+	<script type="text/javascript">
+	
+		$(document).ready(function() {
+			limparTela();
+			if (!window.Worker){
+				alert('Seu navegador não suporta web workers');
+			}
+		});
 
-        limparTela();
-        if (!window.Worker){
-          alert('Seu navegador não suporta web workers');
-        }
-      });
+		function limparTela(){
+			$('#response').empty();
+			$('#tabelaResultado').hide();
+			$('#resultado').empty();
+		}
 
-      function limparTela(){
-        $('#response').empty();
-        $('#tabelaResultado').hide();
-        $('#resultado').empty();
-      }
+				  
+		function dividir(valor, partes) {
+			var intervalos = [];
+			var inicio;
+			var fim = 0;
+			var divisao = valor / partes;
 
-    	
-      var tempo_total = 0;
-      
-      function dividir(valor, partes) {
-        var intervalos = [];
-        var inicio;
-        var fim = 0;
-        var divisao = valor / partes;
+			// quebra os intervalos de acordo com a quantidade de web worker em partes iguais
+			if (valor % partes == 0){
+				for (var i=0; i<partes; i++){
+					// primeiro elemento do intervalo é 0
+					if (i == 0) {
+						inicio = 0;
+					} else {
+						inicio = fim + 1;
+					}
+					fim = fim + divisao;
+					intervalos.push(inicio + '-' + fim);
+				}
+			} 
+			// se a divisão não for igual primeiras partes arredonda para baixo ultimo segmento contem o resto dos valores
+			else {
+				for (var i=0; i<partes; i++){
+				// primeiro elemento elemento do intervalo é 0
+				if (i == 0) {
+					inicio = 0;
+				} else {
+					inicio = fim + 1;
+				}
 
-        // quebra os intervalos de acordo com a quantidade de web worker em partes iguais
-        if (valor % partes == 0){
-          for (var i=0; i<partes; i++){
-            // primeiro elemento elemento do intervalo é 0
-            if (i == 0) {
-              inicio = 0;
-            } else {
-              inicio = fim + 1;
-            }
-            fim = fim + divisao;
-            intervalos.push(inicio + '-' + fim);
-          }
-        } 
-          // se a divisão não for igual primeiras partes arredonda para baixo ultimo segmento contem o resto dos valores
-        else {
-          for (var i=0; i<partes; i++){
-            // primeiro elemento elemento do intervalo é 0
-            if (i == 0) {
-              inicio = 0;
-            } else {
-              inicio = fim + 1;
-            }
-
-            // testa o ultimo trecho do array
-            if (i == (partes - 1)) {
-              fim = parseInt(valor);
-            } else {
-              // arredonda todos os segmentos para baixo quando não for a última posição
-              fim = fim + Math.floor(valor / partes)
-            }
-            intervalos.push(inicio + '-' + fim);
-          }
-        }
-        return intervalos;
-      }
-
-      function executarWebWorker(){
-        var quantidade = $('#quantidade').val();
-        var quantidade_ww = $('#quantidade_ww').val();
-
-        var intervalos = dividir(quantidade, quantidade_ww);
-        console.log(intervalos);
-
-        var workerPrimos = new Worker('js/workerPrimos.js');
+				// o ultimo segmento do array pode ser maior ou menor que os demais
+				if (i == (partes - 1)) {
+					fim = parseInt(valor);
+				} else {
+					// arredonda todos os segmentos para baixo quando não for a última posição
+					fim = fim + Math.floor(valor / partes)
+				}
+				intervalos.push(inicio + '-' + fim);
+				}
+			}
+			return intervalos;
+		}
 
 
-
-      // chama os web worker passando o inicio e fim de cada segmento em que deve procurar os números
-     /* for (var i=0; i<intervalos.length; i++){
-        if (i == 0){
-          var inicio = 0;
-        } else {
-          // inicio = fim intervalo anterior + 1
-          var inicio = intervalos[i-1] + 1;
-        }
-
-        var fim = intervalos[i];
-       
-        workerPrimos.postMessage({'inicio': inicio, 'fim': fim}); 
-        
-        $('#tabelaResultado').show();
-      }
-
-      // evento executado ao receber uma resposta do worker
-      workerPrimos.onmessage = function(e) {
-        $('#resultado').append('<tr><td>'+ e.data.inicio +'</td><td>'+ e.data.fim +'</td><td>'+ e.data.primes.length +'</td><td>'+ e.data.execucao +' ms</td></tr>');
-        
-        var selected = $('input[name=exibirEncontrados]:checked').val();
-        if (selected === 'sim') {
-          console.log('Intervalo ' + e.data.inicio +':'+e.data.fim + ' ' + e.data.primes);
-        }
-      }
+		// retorna um array com dois indices onde o 0 corresponde ao inicio e 1 ao fim de cada intervalo
+		function getIntervalo(arr, pos){
+			var tmp = arr[pos].split('-');
+			var inicio = parseInt(tmp[0]);
+			var fim = parseInt(tmp[1]);
+			return ([inicio, fim]);
+		}
 
 
-      // evento executado ao receber um erro
-      workerPrimos.onerror = function(e) {
-        console.log('workerPrimos.onerror');
-        console.log('linha ' + e.lineno + ' em ' + e.filename);
-      }*/
+		function escreverTabela(repId, quantidade_ww, e){
+			$('#resultado').append('<tr><td>' + repId + '</td><td>' + quantidade_ww + '</td><td>' + e.data.execucao + '</td></tr>');
+			$('#tabelaResultado').show();
+		}
 
-    }
+		function executarRepeticao() {
+			var quantidade = $('#quantidade').val();
+			var quantidade_ww = $('#quantidade_ww').val();
+			var repetir = $('#repetir').val();
 
-    function executarSemWebWorker() {
-      var fim = $('#quantidade').val();
-      var t0 = performance.now();
-      console.time("primos");
-      // create an Array to list all numbers within the specified range.
-      var list = [];
-      for (var i=2; i<=fim; i++) {
-        if (i>1) list.push(i);
-      }
+			var status = false;
+			var repId = 0;
+			do {
+				var status = executarWebWorker(quantidade, quantidade_ww, repId);
+				console.log(status);
+				if (status){
+					repId++;
+					console.log(repId);
+					status = false;
+					console.log(status);
 
-      // check if the no's are primeNos
-      var maxDiv = Math.round(Math.sqrt(fim));
-      var primes = [];
+				}
+			} while (repId < repetir)
 
-      for (var i=0; i<list.length; i++) {
-        var failed = false;
-        for (var j=2; j<=maxDiv; j++) {
-          if ((list[i] != j) && (list[i] % j == 0)) {
-            failed = true;
-          } else if ((j==maxDiv) && (failed == false)) {
-            primes.push(list[i]);
-          }
-        }
-      }
-      console.timeEnd("primos");
-      var t1 = performance.now();
-      var execucao = calcularExecucao(t0, t1);
-      $('#tabelaResultado').show();
-      $('#resultado').append('<tr><td>0</td><td>'+ fim +'</td><td>'+ primes.length +'</td><td>'+ execucao +' ms</td></tr>');
-    }
+//			for (var repId=0; repId<repetir; repId++){
+//				executarWebWorker(quantidade, quantidade_ww, repId);	
+//			}
+		}
 
 
-    </script>
+		function executarWebWorker(quantidade, quantidade_ww, repId) {
+			var workers = [];
+			var intervalos = dividir(quantidade, quantidade_ww);
+			var resta = quantidade_ww;
+			var t0, t1;
+			var terminou = false;
+			console.log('Iniciando execução nº ' + repId);
+
+			t0 = performance.now();   
+			for (var i=0; i<quantidade_ww; i++){
+				workers[i] = new Worker('js/workerPrimos.js');
+				intervalo = getIntervalo(intervalos, i);
+				workers[i].postMessage({'inicio': intervalo[0], 'fim': intervalo[1], 'workerId': i });
+
+				workers[i].onmessage = function(e) {
+					var selected = $('input[name=exibirEncontrados]:checked').val();
+					if (selected === 'sim') {
+						console.log('Intervalo ' + e.data.inicio + ':' + e.data.fim + ' ' + e.data.primes);
+					}
+					resta--;
+					if (resta == 0){
+						t1 = performance.now();
+						escreverTabela(repId, quantidade_ww, e);
+						console.log('Fim da execução nº ' + repId + '\nTempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");    
+						terminou = true;
+						return terminou;
+					}
+				}
+
+				workers[i].onerror = function(e) {
+					console.log('worker.onerror');
+					console.log('linha ' + e.lineno + ' em ' + e.filename);
+				}
+			}
+		}
+
+
+		function executarSemWebWorker() {
+			var fim = $('#quantidade').val();
+			var t0 = performance.now();
+			
+			// create an Array to list all numbers within the specified range.
+			var list = [];
+			for (var i=2; i<=fim; i++) {
+				if (i>1) list.push(i);
+			}
+
+			// check if the no's are primeNos
+			var maxDiv = Math.round(Math.sqrt(fim));
+			var primes = [];
+
+			for (var i=0; i<list.length; i++) {
+				var failed = false;
+				for (var j=2; j<=maxDiv; j++) {
+					if ((list[i] != j) && (list[i] % j == 0)) {
+						failed = true;
+					} else if ((j==maxDiv) && (failed == false)) {
+						primes.push(list[i]);
+					}
+				}
+			}
+
+			var t1 = performance.now();
+			var execucao = calcularExecucao(t0, t1);
+			$('#tabelaResultado').show();
+			$('#resultado').append('<tr><td>Sem WW</td><td>'+ fim +'</td><td>'+ primes.length +'</td><td>'+ execucao +' ms</td></tr>');
+		}
+
+	</script>
   </head>
   <body>
-    <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
-      <h5 class="my-0 mr-md-auto font-weight-normal">Encontrar números primos</h5>
-    </div>
-    <div class="container">
-      <div class="row">
-          <!-- painel esquerdo -->
-          <div class="col-6">
-            <form id="form" onsubmit="return false">
-              <div class="form-row">
-                <div class="form-group col-md-4">
-                  <label for="quantidade"> Encontrar números até</label>
-                  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="6000000">
-                  <small id="emailHelp" class="form-text text-muted"></small>
-                </div>
-                <div class="form-group col-md-4">
-                  <label for="quantidade_ww">Quantidade web worker</label>
-                  <input type="number" class="form-control" name="quantidade_ww" id="quantidade_ww" aria-describedby="" placeholder="" value="3">
-                  <small id="emailHelp" class="form-text text-muted"></small>
-                </div>
-                <div class="col-md-4">
-                  <label for="inputState">Exibir resultado</label>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="exibirEncontrados" id="exibirEncontradosBtnChecked" value="sim">
-                    <label class="form-check-label" for="exampleRadios1">
-                      Sim
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <input class="form-check-input" type="radio" name="exibirEncontrados" value="nao" checked>
-                    <label class="form-check-label" for="exampleRadios2">
-                      Não
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-row">
-                  <div class="form-group">
-                    <button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executarSemWebWorker()">Iniciar testes thread window</button>
-                    <button type="button" class="btn btn-success" onclick="executarWebWorker()">Iniciar testes Web Worker</button>
-                    <button type="button" class="btn btn-primary" onclick="limparTela()">Limpar tela</button> 
-                  </div>
-                </div>
-              </div>
-            </form>
-            <table class="table table-bordered" id="tabelaResultado">
-              <thead class="thead-light">
-                <tr>
-                  <th>Início</th>
-                  <th>Fim</th>
-                  <th>Encontrados</th>
-                  <th>Tempo em ms</th>
-                </tr>
-              </thead>
-              <tbody id="resultado"></tbody>
-          </table>
-        </div>
+	<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+	  <h5 class="my-0 mr-md-auto font-weight-normal">Encontrar números primos</h5>
+	</div>
+	<div class="container">
+	  <div class="row">
+		  <!-- painel esquerdo -->
+		  <div class="col-6">
+			<form id="form" onsubmit="return false">
+			  <div class="form-row">
+				<div class="form-group col-md-4">
+				  <label for="quantidade">Encontrar números até</label>
+				  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="10000000">
+				  <small id="emailHelp" class="form-text text-muted"></small>
+				</div>
+				<div class="form-group col-md-4">
+				  <label for="quantidade_ww">Workers</label>
+				  <input type="number" class="form-control" name="quantidade_ww" id="quantidade_ww" aria-describedby="" placeholder="" value="2">
+				  <small id="emailHelp" class="form-text text-muted"></small>
+				</div>
+				<div class="form-group col-md-4">
+				  <label for="repetir">Repetir</label>
+				  <input type="number" class="form-control" name="repetir" id="repetir" aria-describedby="" placeholder="" value="5">
+				  <small id="emailHelp" class="form-text text-muted"></small>
+				</div>
+			  </div>
+			  <div class="form-row">
+				<div class="col-md-8">
+				  <label for="inputState">Exibir resultado</label>
+				  <div class="form-check">
+					<input class="form-check-input" type="radio" name="exibirEncontrados" id="exibirEncontradosBtnChecked" value="sim">
+					<label class="form-check-label" for="exampleRadios1">
+					  Sim
+					</label>
+				  </div>
+				  <div class="form-check">
+					<input class="form-check-input" type="radio" name="exibirEncontrados" value="nao" checked>
+					<label class="form-check-label" for="exampleRadios2">
+					  Não
+					</label>
+				  </div>
+				</div>
+			  </div>
+			  <div class="form-row">
+				<div class="form-row">
+				  <div class="form-group">
+					<button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executarSemWebWorker()">Iniciar testes thread window</button>
+					<button type="button" class="btn btn-success" onclick="executarRepeticao()">Iniciar testes Web Worker</button>
+					<button type="button" class="btn btn-primary" onclick="limparTela()">Limpar tela</button> 
+				  </div>
+				</div>
+			  </div>
+			</form>
+			<table class="table table-bordered" id="tabelaResultado">
+			  <thead class="thead-light">
+				<tr>
+				  <th>Repetição</th>
+				  <th>Quantidade ww</th>
+				  <th>Tempo (seg)</th>
+				</tr>
+			  </thead>
+			  <tbody id="resultado"></tbody>
+		  </table>
+		</div>
 
-        <!-- painel direito -->
-        <div class="col-6">
-            <h5>Interação com a página</h5>
-            <form>
-              <div class="form-row">
-                <div class="form-group col-md-12">
-                  <textarea class="form-control" id="msg" rows="3"></textarea>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group col-md-12">
-                  <button type="button" class="btn btn-primary" onclick="request()">Enviar</button>
-                </div>
-              </div> 
-            </form>
-          <p id="response"></p>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-12">
-        </div>
-      </div>
-    </div>
+		<!-- painel direito -->
+		<div class="col-6">
+			<h5>Interação com a página</h5>
+			<form>
+			  <div class="form-row">
+				<div class="form-group col-md-12">
+				  <textarea class="form-control" id="msg" rows="3"></textarea>
+				</div>
+			  </div>
+			  <div class="form-row">
+				<div class="form-group col-md-12">
+				  <button type="button" class="btn btn-primary" onclick="request()">Enviar</button>
+				</div>
+			  </div> 
+			</form>
+		  <p id="response"></p>
+		</div>
+	  </div>
+	  <div class="row">
+		<div class="col-12">
+		</div>
+	  </div>
+	</div>
   </body>
 </html>
