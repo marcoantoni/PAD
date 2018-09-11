@@ -99,30 +99,11 @@
 			var quantidade_ww = $('#quantidade_ww').val();
 			var repetir = $('#repetir').val();
 
-			/*
-			var status = false;
-
-			var repId = 0;
-			do {
-				var status = executarWebWorker(quantidade, quantidade_ww, repId);
-				console.log(status);
-				if (status){
-					repId++;
-					console.log(repId);
-					status = false;
-					console.log(status);
-
-				}
-			} while (repId < repetir)
-*/
-			for (var repId=0; repId<repetir; repId++){
-				executarWebWorker(quantidade, quantidade_ww, repId);	
-			}
-
+			executarWebWorker(quantidade, quantidade_ww, 0, repetir);	
 		}
 
 
-		function executarWebWorker(quantidade, quantidade_ww, repId) {
+		function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
 			var workers = [];
 			var intervalos = dividir(quantidade, quantidade_ww);
 			var resta = quantidade_ww;
@@ -145,9 +126,12 @@
 					if (resta == 0){
 						t1 = performance.now();
 						escreverTabela(repId, quantidade_ww, e);
-						console.log('Fim da execução nº ' + repId + '\nTempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");    
-						terminou = true;
-						return terminou;
+						console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");    
+						// controle de quntas vezes o experimento deve ser repetudo.
+						if (repId < repetir){
+							repId++;
+							executarWebWorker(quantidade, quantidade_ww, repId, repetir);
+						}
 					}
 				}
 
@@ -205,19 +189,19 @@
 						<div class="form-group col-md-6">
 						  <label for="quantidade">Encontrar números até</label>
 						  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="10000000">
-						  <small id="emailHelp" class="form-text text-muted"></small>
+						  <small class="form-text text-muted"></small>
 						</div>
 						<div class="form-group col-md-6">
-						  <label for="quantidade_ww">Workers</label>
+						  <label for="quantidade_ww">Número de Web Workers</label>
 						  <input type="number" class="form-control" name="quantidade_ww" id="quantidade_ww" aria-describedby="" placeholder="" value="2">
-						  <small id="emailHelp" class="form-text text-muted"></small>
+						  <small class="form-text text-muted">para processamento</small>
 						</div>
 				  </div>
 				  <div class="form-row">
 				  	<div class="form-group col-md-6">
 						  <label for="repetir">Repetir o teste</label>
 						  <input type="number" class="form-control" name="repetir" id="repetir" aria-describedby="" placeholder="" value="5">
-						  <small id="emailHelp" class="form-text text-muted"></small>
+						  <small class="form-text text-muted">vezes</small>
 						</div>
 						<div class="form-group col-md-6">
 							<label for="resultado">Exibir resultado (console)</label> <br>
@@ -227,6 +211,7 @@
 							<label class="radio-inline">
 								<input type="radio" name="exibirEncontrados" id="exibirEncontrados" value="nao"> Não
 							</label>
+							<small class="form-text text-muted">exibir intervalos e os números encontrados</small>
 						</div>
 				  </div>
 					<div class="form-row">
@@ -287,40 +272,43 @@
 							<div class="panel-body">
 								<pre>
 <code>
-function executarWebWorker(quantidade, quantidade_ww, repId) {
-    var workers = [];
-    var intervalos = dividir(quantidade, quantidade_ww);
-    var resta = quantidade_ww;
-    var t0, t1;
-    var terminou = false;
-    console.log('Iniciando execução nº ' + repId);
+function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
+	var workers = [];
+	var intervalos = dividir(quantidade, quantidade_ww);
+	var resta = quantidade_ww;
+	var t0, t1;
+	var terminou = false;
+	console.log('Iniciando execução nº ' + repId);
 
-    t0 = performance.now();   
-    for (var i=0; i < quantidade_ww; i++){
-        workers[i] = new Worker('js/workerPrimos.js');
-        intervalo = getIntervalo(intervalos, i);
-        workers[i].postMessage({'inicio': intervalo[0], 'fim': intervalo[1], 'workerId': i });
+	t0 = performance.now();   
+	for (var i=0; i < quantidade_ww; i++){
+		workers[i] = new Worker('js/workerPrimos.js');
+		intervalo = getIntervalo(intervalos, i);
+		workers[i].postMessage({'inicio': intervalo[0], 'fim': intervalo[1], 'workerId': i });
 
-        workers[i].onmessage = function(e) {
-            var selected = $('input[name=exibirEncontrados]:checked').val();
-            if (selected === 'sim') {
-                console.log('Intervalo ' + e.data.inicio + ':' + e.data.fim + ' ' + e.data.primes);
-            }
-            resta--;
-            if (resta == 0){
-                t1 = performance.now();
-                escreverTabela(repId, quantidade_ww, e);
-                console.log('Fim da execução nº ' + repId + '\nTempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");    
-                terminou = true;
-                return terminou;
-            }
-        }
+		workers[i].onmessage = function(e) {
+			var selected = $('input[name=exibirEncontrados]:checked').val();
+			if (selected === 'sim') {
+				console.log('Intervalo ' + e.data.inicio + ':' + e.data.fim + ' ' + e.data.primes);
+			}
+			resta--;
+			if (resta == 0){
+				t1 = performance.now();
+				escreverTabela(repId, quantidade_ww, e);
+				console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");    
+				// controle de quntas vezes o experimento deve ser repetudo.
+				if (repId < repetir){
+					repId++;
+					executarWebWorker(quantidade, quantidade_ww, repId, repetir);
+				}
+			}
+		}
 
-        workers[i].onerror = function(e) {
-            console.log('worker.onerror');
-            console.log('linha ' + e.lineno + ' em ' + e.filename);
-        }
-    }
+		workers[i].onerror = function(e) {
+			console.log('worker.onerror');
+			console.log('linha ' + e.lineno + ' em ' + e.filename);
+		}
+	}
 }
 </code>
 									</pre>
