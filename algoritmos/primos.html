@@ -43,7 +43,7 @@
 			var fim = 0;
 			var divisao = valor / partes;
 
-			// quebra os intervalos de acordo com a quantidade de web worker em partes iguais
+			// todos os intervalos possuem o mesmo tamanho
 			if (valor % partes == 0){
 				for (var i=0; i < partes; i++){
 					// primeiro elemento do intervalo é 0
@@ -56,31 +56,33 @@
 					intervalos.push(inicio + '-' + fim);
 				}
 			} 
-			// se a divisão não for igual primeiras partes arredonda para baixo ultimo segmento contem o resto dos valores
+			// se os intervalos tiverem tamanhos diferentes, o último
+			// poderá ser menor ou maior que os demais
 			else {
-				for (var i=0; i<partes; i++){
-				// primeiro elemento elemento do intervalo é 0
-				if (i == 0) {
-					inicio = 0;
-				} else {
-					inicio = fim + 1;
-				}
+				for (var i=0; i < partes; i++){
+					// primeiro elemento elemento do intervalo é 0
+					if (i == 0) {
+						inicio = 0;
+					} else {
+						inicio = fim + 1;
+					}
 
-				// o ultimo segmento do array pode ser maior ou menor que os demais
-				if (i == (partes - 1)) {
-					fim = parseInt(valor);
-				} else {
-					// arredonda todos os segmentos para baixo quando não for a última posição
-					fim = fim + Math.floor(valor / partes)
-				}
-				intervalos.push(inicio + '-' + fim);
+					// o ultimo segmento do array pode ser maior ou menor que os demais
+					if (i == (partes - 1)) {
+						fim = parseInt(valor);
+					} else {
+						// arredonda todos os segmentos para baixo quando não for a última posição
+						fim = fim + Math.floor(valor / partes)
+					}
+					intervalos.push(inicio + '-' + fim);
 				}
 			}
 			return intervalos;
 		}
 
 
-		// retorna um array com dois indices onde o 0 corresponde ao inicio e 1 ao fim de cada intervalo
+		// retorna um array com dois indices onde o 0 corresponde ao inicio
+		// e 1 ao fim de cada intervalo
 		function getIntervalo(arr, pos){
 			var tmp = arr[pos].split('-');
 			var inicio = parseInt(tmp[0]);
@@ -209,7 +211,7 @@
 								<input type="radio" name="exibirEncontrados" id="exibirEncontradosBtnChecked" value="sim"> Sim
 							</label>
 							<label class="radio-inline">
-								<input type="radio" name="exibirEncontrados" id="exibirEncontrados" value="nao"> Não
+								<input type="radio" name="exibirEncontrados" id="exibirEncontrados" value="nao" checked> Não
 							</label>
 							<small class="form-text text-muted">exibir intervalos e os números encontrados</small>
 						</div>
@@ -270,6 +272,11 @@
 						</div>
 						<div id="collapseTwo" class="panel-collapse collapse in">
 							<div class="panel-body">
+								<p>Função executar web worker recebe quatro parametros que são:</p>
+								<p><b>quantidade</b>: indica até qual numero deve ir a pesquisa</p>
+								<p><b>quantidade_ww</b>: número de web workers a serem usados </p>
+								<p><b>repId</b>: é um identificador para a repetição atual</p>
+								<p><b>repetir</b>: quantas vezes o teste deve ser feito</p>
 								<pre>
 <code>
 function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
@@ -318,12 +325,62 @@ function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
 					<div class="panel panel-default">
 						<div class="panel-heading">
 							<h4 class="panel-title">
-								<a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">3. What is CSS?</a>
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Funções dividir e getIntervalo</a>
 							</h4>
 						</div>
 						<div id="collapseThree" class="panel-collapse collapse">
 							<div class="panel-body">
-								<p>CSS stands for Cascading Style Sheet. CSS allows you to specify various style properties for a given HTML element such as colors, backgrounds, fonts etc. <a href="https://www.tutorialrepublic.com/css-tutorial/" target="_blank">Learn more.</a></p>
+								<p>Função dividir, recebe um inteiro positivo e a quantidade de partes em que esse inteiro deve ser quebrado. Retona um array indicando o ínicio e o fim de cada intervalo</p>
+								<pre>
+<code>
+function dividir(valor, partes) {
+	var intervalos = [];
+	var inicio;
+	var fim = 0;
+	var divisao = valor / partes;
+
+	if (valor % partes == 0){
+		for (var i=0; i < partes; i++){
+			// primeiro elemento do intervalo é 0
+			if (i == 0) {
+				inicio = 0;
+			} else {
+				inicio = fim + 1;
+			}
+			fim = fim + divisao;
+			intervalos.push(inicio + '-' + fim);
+		}
+	} else {
+		for (var i=0; i < partes; i++){
+			if (i == 0) {
+				inicio = 0;
+			} else {
+				inicio = fim + 1;
+			}
+
+			if (i == (partes - 1)) {
+				fim = parseInt(valor);
+			} else {
+				fim = fim + Math.floor(valor / partes)
+			}
+			intervalos.push(inicio + '-' + fim);
+		}
+	}
+	return intervalos;
+}
+</code>
+								</pre>
+								<p>Função getIntervalo, recebe um índice do array retornado pela função dividir e retona um array onde o indíce '0' contém o ínicio do intervalo e '1' corresponde ao fim.</p>
+								<pre>
+<code>
+function getIntervalo(arr, pos){
+	var tmp = arr[pos].split('-');
+	var inicio = parseInt(tmp[0]);
+	var fim = parseInt(tmp[1]);
+	return ([inicio, fim]);
+}
+</code>
+								</pre>
 							</div>
 						</div>
 					</div>
