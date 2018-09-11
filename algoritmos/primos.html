@@ -125,13 +125,20 @@
 						console.log('Intervalo ' + e.data.inicio + ':' + e.data.fim + ' ' + e.data.primes);
 					}
 					resta--;
+					// todos os workers foram executados
 					if (resta == 0){
 						t1 = performance.now();
 						escreverTabela(repId, quantidade_ww, e);
-						console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");    
-						// controle de quntas vezes o experimento deve ser repetudo.
-						if (repId < repetir){
+						console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");
+
+						for (var i=0; i < quantidade_ww; i++) {
+							workers[i].terminate();
+						}   
+						// controle de quantas vezes o experimento deve ser repetido
+						console.log(repId);
+						if (repId < (repetir-1)){
 							repId++;
+							console.log(quantidade+ ' '+ quantidade_ww+ ' '+ repId+ ' '+ repetir);
 							executarWebWorker(quantidade, quantidade_ww, repId, repetir);
 						}
 					}
@@ -299,13 +306,20 @@ function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
 				console.log('Intervalo ' + e.data.inicio + ':' + e.data.fim + ' ' + e.data.primes);
 			}
 			resta--;
+			// todos os workers foram executados
 			if (resta == 0){
 				t1 = performance.now();
 				escreverTabela(repId, quantidade_ww, e);
-				console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");    
-				// controle de quntas vezes o experimento deve ser repetudo.
-				if (repId < repetir){
+				console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");
+
+				for (var i=0; i < quantidade_ww; i++) {
+					workers[i].terminate();
+				}   
+				// controle de quantas vezes o experimento deve ser repetido
+				console.log(repId);
+				if (repId < (repetir-1)){
 					repId++;
+					console.log(quantidade+ ' '+ quantidade_ww+ ' '+ repId+ ' '+ repetir);
 					executarWebWorker(quantidade, quantidade_ww, repId, repetir);
 				}
 			}
