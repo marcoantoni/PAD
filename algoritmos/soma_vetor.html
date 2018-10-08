@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<title>Encontrar números primos</title>
+	<!-- Bootstrap core CSS -->
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/bootstrap2.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="css/highlight/default.css">
+	<!-- Custom styles for this template -->
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+	<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="js/algoritmos.js"></script>
+	<script src="js/highlight.pack.js"></script>
+
+
+	<script type="text/javascript">
+
+		$(document).ready(function() {
+			limparTela();
+			if (!window.Worker){
+				alert('Seu navegador não suporta web workers');
+			}
+
+			$('pre code').each(function(i, block) {
+    		hljs.highlightBlock(block);
+  		});
+		});
+
+		function limparTela(){
+			$('#response').empty();
+			$('#tabelaResultado').hide();
+			$('#resultado').empty();
+		}
+
+				  
+		function dividir(arr, partes) {
+			var newArr = [],
+				tamanho = arr.length,
+				grupo = tamanho / partes;
+			
+			for (var i=0; i < tamanho; i = i+ grupo) {
+				newArr.push(arr.slice(i, (i+grupo)));
+			
+			}
+			//console.log(newArr);
+			return newArr;
+		}
+
+
+		function escreverTabela(repId, quantidade_ww, e){
+			$('#resultado').append('<tr><td>' + repId + '</td><td>' + quantidade_ww + '</td><td>' + e.data.execucao + '</td></tr>');
+			$('#tabelaResultado').show();
+		}
+
+		function executarRepeticao() {
+			var quantidade = $('#quantidade').val();
+			var quantidade_ww = $('#quantidade_ww').val();
+			var repetir = $('#repetir').val();
+
+			// gerar numeros
+		    var workerGerador = new Worker('js/workerGerador.js');
+		    console.log('Gerando o array...');
+		    workerGerador.postMessage({
+		    	'quantidade': quantidade, 
+		    	'op': 3 
+		    }); 
+			
+			workerGerador.onmessage = function (e) {
+				//console.log(e.data);
+				console.log('array gerado. Iniciando execução...');
+				var arraySegmentado = dividir(e.data, quantidade_ww);
+				executarWebWorker(arraySegmentado, quantidade_ww, 0, repetir);
+			}	
+		}
+
+
+		function executarWebWorker(arraySegmentado, quantidade_ww, repId, repetir = null) {
+		    
+			var workers = [];
+			//console.log(arraySegmentado);
+			var resta = quantidade_ww;
+			var t0, t1;
+			var terminou = false;
+			soma = 0;
+			//console.log('Iniciando execução nº ' + repId);
+
+			t0 = performance.now();   
+			for (var i=0; i < quantidade_ww; i++) {
+				workers[i] = new Worker('js/workerSomaVetor.js');
+				
+				workers[i].postMessage({'arr': arraySegmentado[i], 'workerId': i });
+
+				workers[i].onmessage = function(e) {
+					soma = soma + e.data.soma;
+					resta--;
+					// todos os workers foram executados
+					if (resta == 0) {
+						t1 = performance.now();
+						//escreverTabela(repId, quantidade_ww, e);
+						console.log('soma=' + soma);
+						console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");
+
+						for (var i=0; i < quantidade_ww; i++) {
+							workers[i].terminate();
+						}   
+						// controle de quantas vezes o experimento deve ser repetido
+						//console.log(repId);
+						if (repId < (repetir-1)){
+							repId++;
+							//console.log(quantidade+ ' '+ quantidade_ww+ ' '+ repId+ ' '+ repetir);
+							executarWebWorker(arraySegmentado, quantidade_ww, repId, repetir);
+						}
+					}
+				}
+
+				workers[i].onerror = function(e) {
+					console.log('worker.onerror');
+					console.log('linha ' + e.lineno + ' em ' + e.filename);
+				}
+			}
+			
+		}
+
+	</script>
+  </head>
+  <body>
+	<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
+	  <h4 class="my-0 mr-md-auto font-weight-normal">Encontrar números primos</h4>
+	</div>
+	<div class="container">
+	  <div class="row">
+		  <!-- painel esquerdo -->
+		  <div class="col-6">
+				<form id="form" onsubmit="return false">
+				  <div class="form-row">
+						<div class="form-group col-md-6">
+						  <label for="quantidade">Encontrar números até</label>
+						  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="100000000">
+						  <small class="form-text text-muted"></small>
+						</div>
+						<div class="form-group col-md-6">
+						  <label for="quantidade_ww">Número de Web Workers</label>
+						  <input type="number" class="form-control" name="quantidade_ww" id="quantidade_ww" aria-describedby="" placeholder="" value="2">
+						  <small class="form-text text-muted">para processamento</small>
+						</div>
+				  </div>
+				  <div class="form-row">
+				  	<div class="form-group col-md-6">
+						  <label for="repetir">Repetir o teste</label>
+						  <input type="number" class="form-control" name="repetir" id="repetir" aria-describedby="" placeholder="" value="9">
+						  <small class="form-text text-muted">vezes</small>
+						</div>
+						<div class="form-group col-md-6">
+							<label for="resultado">Exibir resultado (console)</label> <br>
+							<label class="radio-inline">
+								<input type="radio" name="exibirEncontrados" id="exibirEncontradosBtnChecked" value="sim"> Sim
+							</label>
+							<label class="radio-inline">
+								<input type="radio" name="exibirEncontrados" id="exibirEncontrados" value="nao" checked> Não
+							</label>
+							<small class="form-text text-muted">exibir intervalos e os números encontrados</small>
+						</div>
+				  </div>
+					<div class="form-row">
+					  <div class="form-group">
+							<button type="button" class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="Ao iniciar uma tarefa que exige grande poder de processamento, o navegador irá congelar" onclick="executarSemWebWorker()">Iniciar testes thread window</button>
+							<button type="button" class="btn btn-success" onclick="executarRepeticao()">Iniciar testes Web Worker</button>
+							<button type="button" class="btn btn-primary" onclick="limparTela()">Limpar tela</button> 
+					  </div>
+					</div>
+				</form>
+				<table class="table table-bordered" id="tabelaResultado">
+				  <thead class="thead-light">
+					<tr>
+					  <th>Repetição</th>
+					  <th>Quantidade ww</th>
+					  <th>Tempo (seg)</th>
+					</tr>
+				  </thead>
+				  <tbody id="resultado"></tbody>
+			  </table>
+			</div>
+			<!-- painel esquerdo -->
+
+			<!-- painel direito -->
+			<div class="col-6">
+				<div id="accordion" class="panel-group">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Interação com a página</a>
+							</h4>
+						</div>
+						<div id="collapseOne" class="panel-collapse collapse">
+							<div class="panel-body">
+								<form>
+								    <div class="form-row">
+								        <div class="form-group col-md-12">
+								            <textarea class="form-control" id="msg" rows="3"></textarea>
+								        </div>
+								    </div>
+								    <div class="form-row">
+								        <div class="form-group col-md-12">
+								            <button type="button" class="btn btn-primary" onclick="request()">Enviar</button>
+								        </div>
+								    </div> 
+								</form>
+								<p id="response"></p>
+							</div>
+						</div>
+					</div>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">Código de criação dinamica dos web wrokers</a>
+							</h4>
+						</div>
+						<div id="collapseTwo" class="panel-collapse collapse in">
+							<div class="panel-body">
+								<p>Função executar web worker recebe quatro parametros que são:</p>
+								<p><b>quantidade</b>: indica até qual numero deve ir a pesquisa</p>
+								<p><b>quantidade_ww</b>: número de web workers a serem usados </p>
+								<p><b>repId</b>: é um identificador para a repetição atual</p>
+								<p><b>repetir</b>: quantas vezes o teste deve ser feito</p>
+								<pre>
+<code>
+function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
+	var workers = [];
+	var intervalos = dividir(quantidade, quantidade_ww);
+	var resta = quantidade_ww;
+	var t0, t1;
+	var terminou = false;
+	console.log('Iniciando execução nº ' + repId);
+
+	t0 = performance.now();   
+	for (var i=0; i < quantidade_ww; i++){
+		workers[i] = new Worker('js/workerPrimos.js');
+		intervalo = getIntervalo(intervalos, i);
+		workers[i].postMessage({'inicio': intervalo[0], 'fim': intervalo[1], 'workerId': i });
+
+		workers[i].onmessage = function(e) {
+			var selected = $('input[name=exibirEncontrados]:checked').val();
+			if (selected === 'sim') {
+				console.log('Intervalo ' + e.data.inicio + ':' + e.data.fim + ' ' + e.data.primes);
+			}
+			resta--;
+			// todos os workers foram executados
+			if (resta == 0){
+				t1 = performance.now();
+				escreverTabela(repId, quantidade_ww, e);
+				console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");
+
+				for (var i=0; i < quantidade_ww; i++) {
+					workers[i].terminate();
+				}   
+				// controle de quantas vezes o experimento deve ser repetido
+				console.log(repId);
+				if (repId < (repetir-1)){
+					repId++;
+					console.log(quantidade+ ' '+ quantidade_ww+ ' '+ repId+ ' '+ repetir);
+					executarWebWorker(quantidade, quantidade_ww, repId, repetir);
+				}
+			}
+		}
+
+		workers[i].onerror = function(e) {
+			console.log('worker.onerror');
+			console.log('linha ' + e.lineno + ' em ' + e.filename);
+		}
+	}
+}
+</code>
+									</pre>
+							</div>
+						</div>
+					</div>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Funções dividir e getIntervalo</a>
+							</h4>
+						</div>
+						<div id="collapseThree" class="panel-collapse collapse">
+							<div class="panel-body">
+								<p>Função dividir, recebe um inteiro positivo e a quantidade de partes em que esse inteiro deve ser quebrado. Retona um array indicando o ínicio e o fim de cada intervalo</p>
+								<pre>
+<code>
+function dividir(valor, partes) {
+	var intervalos = [];
+	var inicio;
+	var fim = 0;
+	var divisao = valor / partes;
+
+	if (valor % partes == 0){
+		for (var i=0; i < partes; i++){
+			// primeiro elemento do intervalo é 0
+			if (i == 0) {
+				inicio = 0;
+			} else {
+				inicio = fim + 1;
+			}
+			fim = fim + divisao;
+			intervalos.push(inicio + '-' + fim);
+		}
+	} else {
+		for (var i=0; i < partes; i++){
+			if (i == 0) {
+				inicio = 0;
+			} else {
+				inicio = fim + 1;
+			}
+
+			if (i == (partes - 1)) {
+				fim = parseInt(valor);
+			} else {
+				fim = fim + Math.floor(valor / partes)
+			}
+			intervalos.push(inicio + '-' + fim);
+		}
+	}
+	return intervalos;
+}
+</code>
+								</pre>
+								<p>Função getIntervalo, recebe um índice do array retornado pela função dividir e retona um array onde o indíce '0' contém o ínicio do intervalo e '1' corresponde ao fim.</p>
+								<pre>
+<code>
+function getIntervalo(arr, pos){
+	var tmp = arr[pos].split('-');
+	var inicio = parseInt(tmp[0]);
+	var fim = parseInt(tmp[1]);
+	return ([inicio, fim]);
+}
+</code>
+								</pre>
+							</div>
+						</div>
+					</div>
+				</div>	
+			</div> <!-- painel direito -->
+			</div>
+		</div> 
+  </body>
+</html>
