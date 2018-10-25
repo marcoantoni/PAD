@@ -16,7 +16,6 @@
 	<script type="text/javascript" src="js/algoritmos.js"></script>
 	<script src="js/highlight.pack.js"></script>
 
-
 	<script type="text/javascript">
 
 		$(document).ready(function() {
@@ -24,10 +23,26 @@
 			if (!window.Worker){
 				alert('Seu navegador não suporta web workers');
 			}
+			
+			$('#quantidade_ww_final').click(function() {
+			  $('#repetir').prop('disabled', true);
+			  $('#repetir').val(1);
+			  if ( $('#quantidade_ww_incial').val() === $( '#quantidade_ww_final' ).val())
+			  	$('#repetir').prop('disabled', false);
+
+			});
+
+			$( '#repetir' ).click(function() {
+				var repetir = $('#repetir').val();
+				if (repetir > 1) {
+					$('#quantidade_ww_final').val($('#quantidade_ww_incial').val());
+				}
+			});
 
 			$('pre code').each(function(i, block) {
     		hljs.highlightBlock(block);
   		});
+
 		});
 
 		function limparTela(){
@@ -91,17 +106,24 @@
 		}
 
 
-		function escreverTabela(repId, quantidade_ww, e){
-			$('#resultado').append('<tr><td>' + repId + '</td><td>' + quantidade_ww + '</td><td>' + e.data.execucao + '</td></tr>');
+		function escreverTabela(repId, quantidade_ww, tempo){
+			var selected = $('input[name=exibirTempo]:checked').val();
+			if (selected === 'seg') {
+				var tempo =  this.tempo / 1000 + "s";
+			}
+			
+			
+			$('#resultado').append('<tr><td>' + repId + '</td><td>' + quantidade_ww + '</td><td>' + tempo + '</td></tr>');
 			$('#tabelaResultado').show();
 		}
 
 		function executarRepeticao() {
 			var quantidade = $('#quantidade').val();
-			var quantidade_ww = $('#quantidade_ww').val();
+			var ww_inicio = $('#quantidade_ww_incial').val();
+			var ww_fim = $('#quantidade_ww_final').val();
 			var repetir = $('#repetir').val();
-
-			executarWebWorker(quantidade, quantidade_ww, 0, repetir);	
+		
+			executarWebWorker(quantidade, ww_inicio, 1, repetir);	
 		}
 
 
@@ -109,7 +131,7 @@
 			var workers = [];
 			var intervalos = dividir(quantidade, quantidade_ww);
 			var resta = quantidade_ww;
-			var t0, t1;
+			var t0, t1, numWorker;
 			var terminou = false;
 			console.log('Iniciando execução nº ' + repId);
 
@@ -128,18 +150,26 @@
 					// todos os workers foram executados
 					if (resta == 0){
 						t1 = performance.now();
-						escreverTabela(repId, quantidade_ww, e);
-						console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");
+						tempo = calcularExecucao(t0, t1);
+						escreverTabela(repId, quantidade_ww, tempo);
+						console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + tempo);
 
 						for (var i=0; i < quantidade_ww; i++) {
 							workers[i].terminate();
 						}   
 						// controle de quantas vezes o experimento deve ser repetido
-						console.log(repId);
-						if (repId < (repetir-1)){
+						var numWorker = parseInt(quantidade_ww) + 1;
+						var ww_fim = $('#quantidade_ww_final').val();
+						
+						if (repId < (repetir)){
 							repId++;
-							console.log(quantidade+ ' '+ quantidade_ww+ ' '+ repId+ ' '+ repetir);
 							executarWebWorker(quantidade, quantidade_ww, repId, repetir);
+							console.log(repId + ' ' + repetir);
+							// se for a ultima repetição, imcrementa o número de worker para iniciar o próximo ciclo de testes							
+						}
+
+						if (quantidade_ww < ww_fim) {
+							executarWebWorker(quantidade, numWorker, 1, repetir);
 						}
 					}
 				}
@@ -197,20 +227,8 @@
 				  <div class="form-row">
 						<div class="form-group col-md-6">
 						  <label for="quantidade">Encontrar números até</label>
-						  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="" value="10000000">
+						  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="10000000" value="100000">
 						  <small class="form-text text-muted"></small>
-						</div>
-						<div class="form-group col-md-6">
-						  <label for="quantidade_ww">Número de Web Workers</label>
-						  <input type="number" class="form-control" name="quantidade_ww" id="quantidade_ww" aria-describedby="" placeholder="" value="2">
-						  <small class="form-text text-muted">para processamento</small>
-						</div>
-				  </div>
-				  <div class="form-row">
-				  	<div class="form-group col-md-6">
-						  <label for="repetir">Repetir o teste</label>
-						  <input type="number" class="form-control" name="repetir" id="repetir" aria-describedby="" placeholder="" value="5">
-						  <small class="form-text text-muted">vezes</small>
 						</div>
 						<div class="form-group col-md-6">
 							<label for="resultado">Exibir resultado (console)</label> <br>
@@ -221,6 +239,33 @@
 								<input type="radio" name="exibirEncontrados" id="exibirEncontrados" value="nao" checked> Não
 							</label>
 							<small class="form-text text-muted">exibir intervalos e os números encontrados</small>
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group col-md-3">
+						  <label for="quantidade_ww">Nº inicial</label>
+						  <input type="number" class="form-control" name="quantidade_ww_incial" id="quantidade_ww_incial" aria-describedby="" placeholder="" value="1">
+						  <small class="form-text text-muted">de web workers</small>
+						</div>
+						<div class="form-group col-md-3">
+						  <label for="quantidade_ww">Nº final</label>
+						  <input type="number" class="form-control" name="quantidade_ww_final" id="quantidade_ww_final" aria-describedby="" placeholder="" value="8">
+						  <small class="form-text text-muted">de web workers</small>
+						</div>
+				  	<div class="form-group col-md-3">
+						  <label for="repetir">Repetir o teste</label>
+						  <input type="number" class="form-control" name="repetir" id="repetir" aria-describedby="" placeholder="" value="1">
+						  <small class="form-text text-muted">vezes</small>
+						</div>
+						<div class="form-group col-md-3">
+							<label for="resultado">Exibir tempo</label> <br>
+							<label class="radio-inline">
+								<input type="radio" name="exibirTempo" id="exibirTempoBtnChecked" value="seg"> seg
+							</label>
+							<label class="radio-inline">
+								<input type="radio" name="exibirTempo" id="exibirTempo" value="ms" checked> ms
+							</label>
+							<small class="form-text text-muted"></small>
 						</div>
 				  </div>
 					<div class="form-row">
@@ -236,7 +281,7 @@
 					<tr>
 					  <th>Repetição</th>
 					  <th>Quantidade ww</th>
-					  <th>Tempo (seg)</th>
+					  <th>Tempo de exeução</th>
 					</tr>
 				  </thead>
 				  <tbody id="resultado"></tbody>
