@@ -13,6 +13,7 @@
 	<!-- Custom styles for this template -->
 	<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
 	<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="http://transparencia.saocarlos.ifsc.edu.br/js/Chart.js"></script>
 	<script type="text/javascript" src="js/algoritmos.js"></script>
 	<script src="js/highlight.pack.js"></script>
 
@@ -49,6 +50,7 @@
 			$('#response').empty();
 			$('#tabelaResultado').hide();
 			$('#resultado').empty();
+			removeData(graficoTempoExecucao);
 		}
 
 				  
@@ -148,7 +150,7 @@
 					}
 					resta--;
 					// todos os workers foram executados
-					if (resta == 0){
+					if (resta == 0) {
 						t1 = performance.now();
 						tempo = calcularExecucao(t0, t1);
 						escreverTabela(repId, quantidade_ww, tempo);
@@ -156,21 +158,25 @@
 
 						for (var i=0; i < quantidade_ww; i++) {
 							workers[i].terminate();
-						}   
+						}
+						
+						// atualiza o gráfico
+						var temp = tempo / 1000;
+						addData(graficoTempoExecucao, quantidade_ww, temp);
+
 						// controle de quantas vezes o experimento deve ser repetido
 						var numWorker = parseInt(quantidade_ww) + 1;
 						var ww_fim = $('#quantidade_ww_final').val();
 						
-						if (repId < (repetir)){
+						if (repId < repetir){
 							repId++;
-							executarWebWorker(quantidade, quantidade_ww, repId, repetir);
-							console.log(repId + ' ' + repetir);
-							// se for a ultima repetição, imcrementa o número de worker para iniciar o próximo ciclo de testes							
+							executarWebWorker(limite, quantidade_ww, repId, repetir);							
 						}
 
 						if (quantidade_ww < ww_fim) {
 							executarWebWorker(quantidade, numWorker, 1, repetir);
 						}
+
 					}
 				}
 
@@ -180,7 +186,6 @@
 				}
 			}
 		}
-
 
 		function executarSemWebWorker() {
 			var fim = $('#quantidade').val();
@@ -227,7 +232,7 @@
 				  <div class="form-row">
 						<div class="form-group col-md-6">
 						  <label for="quantidade">Encontrar números até</label>
-						  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="10000000" value="100000">
+						  <input type="number" class="form-control" name="quantidade" id="quantidade" aria-describedby="emailHelp" placeholder="10000000" value="10000000">
 						  <small class="form-text text-muted"></small>
 						</div>
 						<div class="form-group col-md-6">
@@ -276,6 +281,8 @@
 					  </div>
 					</div>
 				</form>
+			  <canvas id="graficoTempoExecucao" width="400px" height="400px"></canvas>
+			 
 				<table class="table table-bordered" id="tabelaResultado">
 				  <thead class="thead-light">
 					<tr>
@@ -303,7 +310,7 @@
 								<form>
 								    <div class="form-row">
 								        <div class="form-group col-md-12">
-								            <textarea class="form-control" id="msg" rows="3"></textarea>
+													<textarea class="form-control" id="msg" rows="3"></textarea>
 								        </div>
 								    </div>
 								    <div class="form-row">
@@ -448,4 +455,56 @@ function getIntervalo(arr, pos){
 			</div>
 		</div> 
   </body>
+<script>
+	var ctcliberacaorecursos = document.getElementById("graficoTempoExecucao");
+	var graficoTempoExecucao = new Chart(ctcliberacaorecursos, {
+		type: 'line',
+		options: {
+			title: {
+        display: true,
+        text: 'Comparação do tempo de exucução'
+      },
+       scales: {
+        yAxes: [{
+            display: true,
+            ticks: {
+              beginAtZero: true   // minimum value will be 0.
+            },
+            scaleLabel: {
+			        display: true,
+			        labelString: 'tempo em segundos'
+			      }
+        }],
+        xAxes: [{
+          scaleLabel: {
+		        display: true,
+		        labelString: 'web workers'
+		      }
+      }]
+    }
+    },
+		data: {
+			labels: [],
+			datasets: [{
+				data: [ ],
+			}]
+		}
+	});
+
+	function addData(chart, label, data) {
+		chart.data.labels.push(label);
+		chart.data.datasets.forEach((dataset) => {
+			dataset.data.push(data);
+		});
+		chart.update();
+	}
+
+	function removeData(chart) {
+	    chart.data.labels.pop();
+	    chart.data.datasets.forEach((dataset) => {
+	        dataset.data.pop();
+	    });
+	    chart.update();
+	}
+</script>
 </html>
