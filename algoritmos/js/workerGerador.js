@@ -9,9 +9,6 @@ self.addEventListener('message', function(e) {
   var op = data.op;
   var numeros = gerar(quantidade, op);
   
-  //console.log('worker gerador');
-  //console.log(numeros);
-  
   self.postMessage(numeros)
 
 }, false);

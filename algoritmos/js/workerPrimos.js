@@ -1,6 +1,5 @@
 importScripts('algoritmos.js');
 
-// retorns um array numerico
 self.addEventListener('message', function(e) {
  
   var data = e.data;
@@ -35,15 +34,6 @@ self.addEventListener('message', function(e) {
 	}
   var t1 = performance.now();
   var execucao = calcularExecucao(t0, t1);
-    // Continiously updateresults
-  /*  var progress = Math.round(i/list.length*100);
-    if (progress != previousProgress) {
-      postMessage(
-       {messageType: "Progress", data: progress}
-      );
-      previousProgress = progress;    
-    }
-  }*/
 
   this.postMessage({'inicio': inicio, 'fim': fim, primes, execucao, workerId});
 

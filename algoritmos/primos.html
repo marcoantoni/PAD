@@ -5,17 +5,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="description" content="">
 	<meta name="author" content="">
-	<title>Encontrar números primos</title>
+	<title>Encontrar números primos com JavaScript usando Web Workers</title>
 	<!-- Bootstrap core CSS -->
 	<link href="css/bootstrap.min.css" rel="stylesheet">
 	<link href="css/bootstrap2.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="css/highlight/default.css">
 	<!-- Custom styles for this template -->
-	<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="lib/jquery-3.3.1.min.js"></script>
 	<script src="https://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://transparencia.saocarlos.ifsc.edu.br/js/Chart.js"></script>
+	<script type="text/javascript" src="lib/Chart.bundle.min.js"></script>
 	<script type="text/javascript" src="js/algoritmos.js"></script>
-	<script src="js/highlight.pack.js"></script>
+	<script src="lib/highlight.pack.js"></script>
 
 	<script type="text/javascript">
 
@@ -41,9 +41,8 @@
 			});
 
 			$('pre code').each(function(i, block) {
-    		hljs.highlightBlock(block);
-  		});
-
+    			hljs.highlightBlock(block);
+  			});
 		});
 
 		function limparTela(){
@@ -108,13 +107,13 @@
 		}
 
 
-		function escreverTabela(repId, quantidade_ww, tempo){
+		function atualizarTela(repId, quantidade_ww, tempo){
 			var selected = $('input[name=exibirTempo]:checked').val();
 			if (selected === 'seg') {
-				var tempo =  this.tempo / 1000 + "s";
+				var tempo =  this.tempo / 1000;
 			}
-			
-			
+
+			addData(graficoTempoExecucao, quantidade_ww, tempo);
 			$('#resultado').append('<tr><td>' + repId + '</td><td>' + quantidade_ww + '</td><td>' + tempo + '</td></tr>');
 			$('#tabelaResultado').show();
 		}
@@ -153,16 +152,12 @@
 					if (resta == 0) {
 						t1 = performance.now();
 						tempo = calcularExecucao(t0, t1);
-						escreverTabela(repId, quantidade_ww, tempo);
+						atualizarTela(repId, quantidade_ww, tempo);
 						console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + tempo);
 
 						for (var i=0; i < quantidade_ww; i++) {
 							workers[i].terminate();
 						}
-						
-						// atualiza o gráfico
-						var temp = tempo / 1000;
-						addData(graficoTempoExecucao, quantidade_ww, temp);
 
 						// controle de quantas vezes o experimento deve ser repetido
 						var numWorker = parseInt(quantidade_ww) + 1;
@@ -176,7 +171,6 @@
 						if (quantidade_ww < ww_fim) {
 							executarWebWorker(quantidade, numWorker, 1, repetir);
 						}
-
 					}
 				}
 
@@ -222,7 +216,7 @@
   </head>
   <body>
 	<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
-	  <h4 class="my-0 mr-md-auto font-weight-normal">Encontrar números primos</h4>
+	  <h4 class="my-0 mr-md-auto font-weight-normal">Encontrar números primos com JavaScript usando Web Workers</h4>
 	</div>
 	<div class="container">
 	  <div class="row">
@@ -265,10 +259,10 @@
 						<div class="form-group col-md-3">
 							<label for="resultado">Exibir tempo</label> <br>
 							<label class="radio-inline">
-								<input type="radio" name="exibirTempo" id="exibirTempoBtnChecked" value="seg"> seg
+								<input type="radio" name="exibirTempo" id="exibirTempoBtnChecked" value="seg" checked> seg
 							</label>
 							<label class="radio-inline">
-								<input type="radio" name="exibirTempo" id="exibirTempo" value="ms" checked> ms
+								<input type="radio" name="exibirTempo" id="exibirTempo" value="ms"> ms
 							</label>
 							<small class="form-text text-muted"></small>
 						</div>
@@ -281,18 +275,43 @@
 					  </div>
 					</div>
 				</form>
-			  <canvas id="graficoTempoExecucao" width="400px" height="400px"></canvas>
+
+				<div id="collapse2" class="panel-group">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseResultado">Tempo de execução</a>
+							</h4>
+						</div>
+						<div id="collapseResultado" class="panel-collapse collapse">
+							<div class="panel-body">
+			  					<table class="table table-bordered" id="tabelaResultado">
+								  <thead class="thead-light">
+									<tr>
+									  <th>Repetição</th>
+									  <th>Quantidade ww</th>
+									  <th>Tempo de exeução</th>
+									</tr>
+								  </thead>
+								  <tbody id="resultado"></tbody>
+							  </table>
+							</div>
+						</div>
+					</div>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseGrafico">Gráfico dos tempos</a>
+							</h4>
+						</div>
+						<div id="collapseGrafico" class="panel-collapse collapse">
+							<div class="panel-body">
+			  					<canvas id="graficoTempoExecucao" width="400px" height="400px"></canvas>
+							</div>
+						</div>
+					</div>
+				</div>
 			 
-				<table class="table table-bordered" id="tabelaResultado">
-				  <thead class="thead-light">
-					<tr>
-					  <th>Repetição</th>
-					  <th>Quantidade ww</th>
-					  <th>Tempo de exeução</th>
-					</tr>
-				  </thead>
-				  <tbody id="resultado"></tbody>
-			  </table>
 			</div>
 			<!-- painel esquerdo -->
 
@@ -302,10 +321,10 @@
 					<div class="panel panel-default">
 						<div class="panel-heading">
 							<h4 class="panel-title">
-								<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Interação com a página</a>
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseInteracao">Interação com a página</a>
 							</h4>
 						</div>
-						<div id="collapseOne" class="panel-collapse collapse">
+						<div id="collapseInteracao" class="panel-collapse collapse">
 							<div class="panel-body">
 								<form>
 								    <div class="form-row">
@@ -326,10 +345,10 @@
 					<div class="panel panel-default">
 						<div class="panel-heading">
 							<h4 class="panel-title">
-								<a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">Código de criação dinamica dos web wrokers</a>
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseCriacaoWebWorker">Código de criação dinamica dos web wrokers</a>
 							</h4>
 						</div>
-						<div id="collapseTwo" class="panel-collapse collapse in">
+						<div id="collapseCriacaoWebWorker" class="panel-collapse collapse in">
 							<div class="panel-body">
 								<p>Função executar web worker recebe quatro parametros que são:</p>
 								<p><b>quantidade</b>: indica até qual numero deve ir a pesquisa</p>
@@ -337,8 +356,7 @@
 								<p><b>repId</b>: é um identificador para a repetição atual</p>
 								<p><b>repetir</b>: quantas vezes o teste deve ser feito</p>
 								<pre>
-<code>
-function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
+<code>function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
 	var workers = [];
 	var intervalos = dividir(quantidade, quantidade_ww);
 	var resta = quantidade_ww;
@@ -361,7 +379,7 @@ function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
 			// todos os workers foram executados
 			if (resta == 0){
 				t1 = performance.now();
-				escreverTabela(repId, quantidade_ww, e);
+				atualizarTela(repId, quantidade_ww, tempo);
 				console.log('Fim da execução nº ' + repId + '. Tempo de execução: ' + calcularExecucao(t0, t1) / 1000 + "s");
 
 				for (var i=0; i < quantidade_ww; i++) {
@@ -391,15 +409,14 @@ function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
 					<div class="panel panel-default">
 						<div class="panel-heading">
 							<h4 class="panel-title">
-								<a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">Funções dividir e getIntervalo</a>
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseDemaisFuncoes">Funções dividir e getIntervalo</a>
 							</h4>
 						</div>
-						<div id="collapseThree" class="panel-collapse collapse">
+						<div id="collapseDemaisFuncoes" class="panel-collapse collapse">
 							<div class="panel-body">
 								<p>Função dividir, recebe um inteiro positivo e a quantidade de partes em que esse inteiro deve ser quebrado. Retona um array indicando o ínicio e o fim de cada intervalo</p>
 								<pre>
-<code>
-function dividir(valor, partes) {
+<code>function dividir(valor, partes) {
 	var intervalos = [];
 	var inicio;
 	var fim = 0;
@@ -450,39 +467,92 @@ function getIntervalo(arr, pos){
 							</div>
 						</div>
 					</div>
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<h4 class="panel-title">
+								<a data-toggle="collapse" data-parent="#accordion" href="#collapseWebWorker">Código Web Worker</a>
+							</h4>
+						</div>
+						<div id="collapseWebWorker" class="panel-collapse collapse">
+							<div class="panel-body">
+			  					<pre>
+<code>importScripts('algoritmos.js');
+
+self.addEventListener('message', function(e) {
+ 
+  var data = e.data;
+  var inicio = data.inicio;
+  var fim = data.fim;
+  var workerId = data.workerId;
+  
+  var t0 = performance.now();
+ 	// create an Array to list all numbers within the specified range.
+  var list = [];
+  for (var i=inicio; i<=fim; i++) {
+    if (i>1){ list.push(i); 
+    //  console.log(i);
+    }
+  }
+
+  // check if the no's are primeNos
+  var maxDiv = Math.round(Math.sqrt(fim));
+  var primes = [];
+
+  for (var i=0; i < list.length; i++) {
+    var failed = false;
+    for (var j=2; j<=maxDiv; j++) {
+      if ((list[i] != j) && (list[i] % j == 0)) {
+        failed = true;
+      } else if ((j==maxDiv) && (failed == false)) {
+        primes.push(list[i]);
+      }
+    }
+	}
+  var t1 = performance.now();
+  var execucao = calcularExecucao(t0, t1);
+
+  this.postMessage({'inicio': inicio, 'fim': fim, primes, execucao, workerId});
+
+}, false);
+</code>
+			  					</pre>
+							</div>
+						</div>
+					</div>
 				</div>	
 			</div> <!-- painel direito -->
 			</div>
 		</div> 
   </body>
 <script>
-	var ctcliberacaorecursos = document.getElementById("graficoTempoExecucao");
-	var graficoTempoExecucao = new Chart(ctcliberacaorecursos, {
+	var ctxTempo = document.getElementById("graficoTempoExecucao");
+	var graficoTempoExecucao = new Chart(ctxTempo, {
 		type: 'line',
 		options: {
 			title: {
-        display: true,
-        text: 'Comparação do tempo de exucução'
-      },
-       scales: {
-        yAxes: [{
-            display: true,
-            ticks: {
-              beginAtZero: true   // minimum value will be 0.
-            },
-            scaleLabel: {
-			        display: true,
-			        labelString: 'tempo em segundos'
-			      }
-        }],
-        xAxes: [{
-          scaleLabel: {
-		        display: true,
-		        labelString: 'web workers'
-		      }
-      }]
-    }
-    },
+				display: true,
+				text: 'Comparação do tempo de exucução'
+			},
+
+			scales: {
+				yAxes: [{
+					display: true,
+					ticks: {
+						beginAtZero: true   // minimum value will be 0.
+					},
+					scaleLabel: {
+						display: true,
+						labelString: 'tempo em segundos'
+					}
+				}],
+				xAxes: [{
+					scaleLabel: {
+						display: true,
+						labelString: 'web workers'
+					}
+				}]
+			}
+		},
 		data: {
 			labels: [],
 			datasets: [{
@@ -490,21 +560,5 @@ function getIntervalo(arr, pos){
 			}]
 		}
 	});
-
-	function addData(chart, label, data) {
-		chart.data.labels.push(label);
-		chart.data.datasets.forEach((dataset) => {
-			dataset.data.push(data);
-		});
-		chart.update();
-	}
-
-	function removeData(chart) {
-	    chart.data.labels.pop();
-	    chart.data.datasets.forEach((dataset) => {
-	        dataset.data.pop();
-	    });
-	    chart.update();
-	}
 </script>
 </html>

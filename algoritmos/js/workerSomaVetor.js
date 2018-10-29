@@ -13,9 +13,6 @@ self.addEventListener('message', function(e) {
       soma = soma + arr[i];
     }  
 
-    //console.log('soma=' + soma);
-
-   this.postMessage({ 'soma': soma, 'workerId': data.workerId });
-
+    this.postMessage({ 'soma': soma, 'workerId': data.workerId });
 
 }, false);
