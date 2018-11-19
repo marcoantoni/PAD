@@ -128,9 +128,9 @@
 		}
 
 
-		function executarWebWorker(quantidade, quantidade_ww, repId, repetir = null) {
+		function executarWebWorker(limite, quantidade_ww, repId, repetir = null) {
 			var workers = [];
-			var intervalos = dividir(quantidade, quantidade_ww);
+			var intervalos = dividir(limite, quantidade_ww);
 			var resta = quantidade_ww;
 			var t0, t1, numWorker;
 			var terminou = false;
@@ -531,7 +531,7 @@ self.addEventListener('message', function(e) {
 		options: {
 			title: {
 				display: true,
-				text: 'Comparação do tempo de exucução'
+				text: 'scalability analysis'
 			},
 
 			scales: {
@@ -542,7 +542,7 @@ self.addEventListener('message', function(e) {
 					},
 					scaleLabel: {
 						display: true,
-						labelString: 'tempo em segundos'
+						labelString: 'time in seconds'
 					}
 				}],
 				xAxes: [{
